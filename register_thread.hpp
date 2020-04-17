@@ -7,6 +7,9 @@
 #include <vector>
 #include <queue>
 
+#include <chrono>
+#include <ctime>
+
 class Table
 {
     int _col;
@@ -18,15 +21,12 @@ public:
     _w_cols{w_cols}
     { }
     
-    bool setCol(int col, int size)
+    void setCol(int col)
     {
         if( col < _w_cols.size())
         {
             _col = col;
-            _size = size;
-            return true;
         }
-        return false;
     }
 
     int wCol() const
@@ -40,10 +40,6 @@ public:
 
     friend inline ::std::ostream& operator<< (::std::ostream & os, const Table &t)
     {
-        /*if(t._col == 0)
-        {
-            os << std::fixed;
-        }*/
         os << std::setw(t.wCol());
         return os;
     }
@@ -71,11 +67,6 @@ public:
         os << std::left << svid;
         return os;
     }
-    
-    /*operator int() const
-    {
-        return _tid._cant;
-    }*/
 };
 
 class ThreadId
@@ -90,16 +81,14 @@ public:
     
     friend inline std::ostream& operator<<(std::ostream& os, ThreadId &ntid)  
     { 
-        std::string id = std::to_string(ntid._th_n) + ":" + std::to_string(ntid._n_ths);
+        std::string id = std::to_string(ntid._th_n)
+                         + ":" +
+                         std::to_string(ntid._n_ths);
         os << id;
         return os;
     }
 
 };
-
-#include <chrono>
-#include <ctime>
-
 
 class Duration
 {
@@ -119,12 +108,6 @@ public:
         return os;
     }
 
-    operator int () const  
-    { 
-        //precision mas "0." y " s"
-        return _precision + 4;
-    }
-
     friend inline bool operator< (const Duration &da, const Duration &db)
     {
         return da._duration < db._duration;
@@ -141,33 +124,39 @@ public:
     }
 };
 
+
+
+
 class RegisterThread
 {
+
+    struct DataRegister
+        {
+            int n_ths;
+            int th_n;
+            Duration diff;
+            //int reg_id;
+            std::string msg;
+        };
+
+    std::queue<DataRegister> _regs;
+
     std::string _name;
-    int _reg_count;
+    int _reg_count = 0;
     Table _table;
-    std::chrono::system_clock::time_point _start;
+    std::chrono::system_clock::time_point _start, _end;
     
-    Duration _first, _last;
-    
-    struct Register
-    {
-        int n_ths;
-        int th_n;
-        Duration diff;
-        int reg_id;
-        std::string msg;
-        
-    };
-    std::queue<Register> _regs;
+    Duration _first = Duration(std::chrono::duration<double>::max()),
+             _last  = Duration(std::chrono::duration<double>::min());
+
+    bool _initialized, _finalized = false;
     
 public:
     RegisterThread(const std::string & name) :
     _name {name},
-    _table {{6, 8, 6, 16, 27}}
-    {
-        inic();
-    }
+    _start {std::chrono::system_clock::now()},
+    _table {{8, 6, 16, 27}}
+    { }
     
     ~RegisterThread()
     {
@@ -176,11 +165,11 @@ public:
             std::cout << "begin {" << _name << "}"
                       << std::endl
                       << std::left
-                      << column(0) << "#"
-                      << column(1) << "vt"
-                      << column(2) << "tid"
-                      << column(3) << "time"
-                      << column(4) << "message"
+                      //<< column(0) << "#"
+                      << column(0) << "vt"
+                      << column(1) << "tid"
+                      << column(2) << "time"
+                      << column(3) << "message"
                       << std::endl;
               
              while (!_regs.empty())
@@ -188,24 +177,23 @@ public:
                 auto r = _regs.front();
                 VisualThreadId vtid(r.n_ths, r.th_n);
                 ThreadId tid(r.n_ths, r.th_n);
-                std::cout << column(0) << r.reg_id
-                          << column(1) << vtid
-                          << column(2) << tid
-                          << column(3) << r.diff
-                          << column(4) << r.msg
+                //std::cout << column(0) << r.reg_id
+                std::cout << column(0) << vtid
+                          << column(1) << tid
+                          << column(2) << r.diff
+                          << column(3) << r.msg
                           << std::endl;
                 _regs.pop();
             }
         
             int w = 12;
-            Duration t(std::chrono::system_clock::now() - _start);
-            std::cout << "end {" << _name << "} in "<< t
+            std::cout << "end {" << _name << "} in " << chronometrate()
                       << std::endl
                       << std::setw(w)
-                      << "first "  << _first
+                      << "first_reg "  << _first
                       << std::endl
                       << std::setw(w)
-                      << "last " << _last
+                      << "last_reg " << _last
                       << std::endl
                       << std::setw(w)
                       << "diff " << _last - _first
@@ -215,48 +203,34 @@ public:
         }
     }
 
-    void inic()
-    {
-        _reg_count = 0;
-        _start = std::chrono::system_clock::now();
-        _first = Duration(std::chrono::duration<double>::max());
-        _last = Duration(std::chrono::duration<double>::min());
-    }
-
     void registrate(const std::string &msg = "")
     {
-        Duration diff(std::chrono::system_clock::now() - _start);
         #pragma omp critical
         {
-        
+            auto time = chronometrate();
             _regs.push({
                 omp_get_num_threads(),
                 omp_get_thread_num(),
-                diff,
-                _reg_count++,
+                time,
+                //_reg_count++,
                 msg
             });
             
-            if(_first > diff) _first = diff;
-            if(_last  < diff) _last  = diff;
+            if(_first > time) _first = time;
+            if(_last  < time) _last  = time;
         }
     }
 
 private:
 
-    const Table & column(int c, const std::string &str)
+    Duration chronometrate()
     {
-         _table.setCol(c, str.size());
-         return _table;
+        return { std::chrono::system_clock::now() - _start };
     }
-    const Table & column(int c, int s)
-    {
-         _table.setCol(c, s);
-         return _table;
-    }
+
     const Table & column(int c)
     {
-         _table.setCol(c, 0);
+         _table.setCol(c);
          return _table;
     }
 };
