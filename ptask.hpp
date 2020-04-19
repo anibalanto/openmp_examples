@@ -1,17 +1,20 @@
+#pragma once
 #include "register_thread.hpp"
+#include "function_loaded.hpp"
+
 #include <vector>
 
-struct node {
+struct Node {
     int value;
-    struct node *left = nullptr;
-    struct node *right = nullptr;
+    Node *left = nullptr;
+    Node *right = nullptr;
 };
 
-void fill(struct node *&p, int value)
+void fill(Node *&p, int value)
 {
     if(p == nullptr)
     {
-        p = new struct node;
+        p = new Node;
         p->value = value;
     }
     else if(p->value > value)
@@ -23,7 +26,7 @@ void fill(struct node *&p, int value)
     }
 }
 
-void fill (struct node *&p, const std::vector<int> &elems)
+void fill (Node *&p, const std::vector<int> &elems)
 {
     for(auto elem : elems)
     {
@@ -31,102 +34,77 @@ void fill (struct node *&p, const std::vector<int> &elems)
     }
 }
 
-class TreeTraverser
+void free(Node *&p)
 {
-protected:
-    RegisterThread _regist;
-    struct node *_root;
-public:
-    TreeTraverser(const std::string &name, struct node *root) :
-        _regist{name},
-        _root(root)
-    { }
-
-    virtual void traverse() = 0;
-
-protected:
-    virtual void traverse(struct node *p) = 0;
-
-    void process(struct node *p)
+    if(p != nullptr)
     {
-        _regist.registrate(std::to_string(p->value));
+        free(p->left);
+        free(p->right);
+        delete(p);
     }
-
-};
-
-class TreeTraverserSerial: public TreeTraverser
-{
-public:
-    TreeTraverserSerial(struct node *root):
-        TreeTraverser("serial", root)
-    {
-    }
-
-    void traverse() override
-    {
-        _regist.registrate("begin traverse");
-        traverse(_root);
-        _regist.registrate("end traverse");
-    }
-
-protected:
-    void traverse(struct node *p) override
-    {
-        if (p->left)
-            traverse(p->left);
-        process(p);
-        if (p->right)
-            traverse(p->right);
-    }
-};
-
-class TreeTraverserTask: public TreeTraverser
-{
-public:
-    TreeTraverserTask(struct node *root):
-        TreeTraverser("task", root)
-    {
-    }
-
-    void traverse() override
-    {
-        #pragma omp parallel
-        {
-            #pragma omp single
-            {
-                _regist.registrate("begin traverse");
-                traverse(_root);
-                _regist.registrate("end traverse");
-            }
-        }
-    }
-
-protected:
-    void traverse(struct node *p)
-    {
-        if (p->left)
-        #pragma omp task   // p is firstprivate by default
-            traverse(p->left);
-        process(p);
-        if (p->right)
-        #pragma omp task    // p is firstprivate by default
-            traverse(p->right);
-    }
-};
+}
 
 void ptask()
 {
-    struct node *root = nullptr;
+    Node *root = nullptr;
+
     fill(root, {50, 30, 70, 10, 20, 60, 80, 40, 1, 90,
                 53, 33, 73, 13, 23, 63, 83, 93, 43, 3,
                 31, 37, 41, 47, 51, 57, 61, 67, 71, 77 });
 
     {
-        TreeTraverserSerial tts(root);
-        tts.traverse();
+        RegisterThread regist("serial");
+
+        // creo una variable de tipo función que
+        // el retorno es void y recibe como parametro
+        // un puntero a Node
+        std::function<void (Node *)> traverse;
+
+        // la instancio con una función lambda recursiva
+        traverse = [&regist, &traverse](Node *p) {
+            if (p->left)
+                traverse(p->left);
+            regist.registrate(std::to_string(p->value));
+            if (p->right)
+                traverse(p->right);
+        };
+
+        regist.registrate("begin");
+        traverse(root);
+        regist.registrate("end");
     }
+
     {
-        TreeTraverserTask ttt(root);
-        ttt.traverse();
+        RegisterThread regist("task");
+
+        std::function<void (Node *)> traverse;
+
+        #pragma omp parallel
+        {
+            #pragma omp single
+            {
+                traverse = [&regist, &traverse](Node *p)
+                {
+                    if (p->left)
+                    #pragma omp task   // p is firstprivate by default
+                        traverse(p->left);
+                    regist.registrate(std::to_string(p->value));
+                    if (p->right)
+                    #pragma omp task    // p is firstprivate by default
+                        traverse(p->right);
+                };
+
+                regist.registrate("begin");
+                traverse(root);
+                regist.registrate("end");
+            }
+        }
     }
+
+    free(root);
+}
+
+FunctionLoaded load_ptask()
+{
+    return {"ptask", ptask};
 }

@@ -1,54 +1,42 @@
+#pragma once
 #include "register_thread.hpp"
-
-#define CANTX 10
-#define CANTY 10
-#define CANTZ 10
-
-static RegisterThread regist("sections");
-
-void xAxis()
-{
-    regist.registrate("inic x");
-    for(int i = 0; i < CANTX; i++)
-    {
-        regist.registrate("oper x " + std::to_string(i));
-    }
-    regist.registrate("end  x");
-
-}
-
-void yAxis()
-{        
-    regist.registrate("inic y");
-    for(int j = 0; j < CANTY; j++)
-    {
-        regist.registrate("oper y " + std::to_string(j));
-    }
-    regist.registrate("end  y");
-}
-
-void zAxis()
-{
-    regist.registrate("inic z");
-    for(int k = 0; k < CANTZ; k++)
-    {
-        regist.registrate("oper z " + std::to_string(k));
-    }
-    regist.registrate("end  z");
-}
+#include "function_loaded.hpp"
 
 void psections()
 {
+    static int const cant = 10;
+    
+    RegisterThread regist("sections");
+
+    // creo una variable instanciandola con una
+    // función lambda que captura por referencia
+    // la variable regist
+    auto operate = [&regist](const std::string name, int cant)
+    {
+        regist.registrate("inic " + name);
+        for(int i = 0; i < cant; i++)
+        {
+            regist.registrate(name + std::to_string(i));
+        }
+        regist.registrate("end " + name);
+    };
+
     #pragma omp parallel sections
     {
-        #pragma omp section
-        xAxis();
 
         #pragma omp section
-        yAxis();
+        operate("x", cant);
 
         #pragma omp section
-        zAxis();
+        operate("y", cant);
+
+        #pragma omp section
+        operate("z", cant);
     }
 }
 
+
+FunctionLoaded load_psections()
+{
+    return {"psections", psections};
+}

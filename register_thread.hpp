@@ -4,47 +4,12 @@
 #include <iomanip>
 #include <omp.h>
 
-#include <vector>
 #include <queue>
 
 #include <chrono>
 #include <ctime>
 
-class Table
-{
-    int _col;
-    int _size;
-    std::vector<int> _w_cols;
-public:
-    Table(const std::vector<int> &w_cols) :
-    _col{0},
-    _w_cols{w_cols}
-    { }
-    
-    void setCol(int col)
-    {
-        if( col < _w_cols.size())
-        {
-            _col = col;
-        }
-    }
-
-    int wCol() const
-    {
-        if(_w_cols.size() > 0)
-        {
-            return _w_cols[_col];
-        }
-        return 0;
-    }
-
-    friend inline ::std::ostream& operator<< (::std::ostream & os, const Table &t)
-    {
-        os << std::setw(t.wCol());
-        return os;
-    }
-};
-
+#include "table.hpp"
 
 class VisualThreadId
 {
@@ -143,7 +108,7 @@ class RegisterThread
 
     std::string _name;
     int _reg_count = 0;
-    Table _table;
+    Table _t;
     std::chrono::system_clock::time_point _start, _end;
     
     Duration _first = Duration(std::chrono::duration<double>::max()),
@@ -155,7 +120,7 @@ public:
     RegisterThread(const std::string & name) :
     _name {name},
     _start {std::chrono::system_clock::now()},
-    _table {{8, 6, 16, 27}}
+    _t {{8, 6, 16, 27}}
     { }
     
     ~RegisterThread()
@@ -164,12 +129,11 @@ public:
         {
             std::cout << "begin {" << _name << "}"
                       << std::endl
-                      << std::left
                       //<< column(0) << "#"
-                      << column(0) << "vt"
-                      << column(1) << "tid"
-                      << column(2) << "time"
-                      << column(3) << "message"
+                      << _t.header(0) << "vt"
+                      << _t.header(1) << "tid"
+                      << _t.header(2) << "time"
+                      << _t.header(3) << "message"
                       << std::endl;
               
              while (!_regs.empty())
@@ -177,11 +141,11 @@ public:
                 auto r = _regs.front();
                 VisualThreadId vtid(r.n_ths, r.th_n);
                 ThreadId tid(r.n_ths, r.th_n);
-                //std::cout << column(0) << r.reg_id
-                std::cout << column(0) << vtid
-                          << column(1) << tid
-                          << column(2) << r.diff
-                          << column(3) << r.msg
+                //std::cout << _t.column(0) << r.reg_id
+                std::cout << _t.column(0) << vtid
+                          << _t.column(1) << tid
+                          << _t.column(2) << r.diff
+                          << _t.column(3) << r.msg
                           << std::endl;
                 _regs.pop();
             }
@@ -228,9 +192,4 @@ private:
         return { std::chrono::system_clock::now() - _start };
     }
 
-    const Table & column(int c)
-    {
-         _table.setCol(c);
-         return _table;
-    }
 };

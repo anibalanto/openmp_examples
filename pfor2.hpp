@@ -1,6 +1,6 @@
+#pragma once
 #include "register_thread.hpp"
-
-#define CANT 900000000
+#include "function_loaded.hpp"
 
 std::string to_string(int istart, int ipoints)
 {
@@ -9,15 +9,16 @@ std::string to_string(int istart, int ipoints)
 
 void pfor2()
 {
+    static constexpr int const& cant = 900000000;
     {
         RegisterThread regist("secuential");
-        regist.registrate("begin > " + to_string(0, CANT));
-        for (int i = 0; i < CANT; i++);
-        regist.registrate("end   > " + to_string(0, CANT));
+        regist.registrate("begin > " + to_string(0, cant));
+        for (int i = 0; i < cant; i++);
+        regist.registrate("end   > " + to_string(0, cant));
     }
     {
         RegisterThread regist("parallel");
-        int npoints = CANT;
+        int npoints = cant;
         int iam, nt, ipoints, istart;
         #pragma omp parallel default(shared) private(iam,nt,ipoints,istart)
         {
@@ -34,4 +35,9 @@ void pfor2()
             regist.registrate("end   > " + to_string(istart, ipoints));
         }
     }    
+}
+
+FunctionLoaded load_pfor2()
+{
+    return {"pfor2", pfor2};
 }
