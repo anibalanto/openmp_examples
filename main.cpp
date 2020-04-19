@@ -15,6 +15,8 @@
 using namespace std;
 using namespace clipp;
 
+static string soft_name = "omp_examp";
+
 int main(int argc, char* argv[])
 {
     vector<FunctionLoaded> functions { { load_pfor1(),
@@ -33,6 +35,8 @@ int main(int argc, char* argv[])
         option("-l", "--list").set(list).doc("list functions"),
         option("-h", "--help").set(help).doc("help")
      );
+
+    auto usage = [&cli, &argv]() { return usage_lines(cli, soft_name); };
 
     if(parse(argc, argv, cli))
     {
@@ -62,15 +66,13 @@ int main(int argc, char* argv[])
                         .doc_column(15)
                         .last_column(99);
 
-            std::cout << usage_lines(cli, "omp_func") << '\n';
+            std::cout << usage() << '\n';
             std::cout << documentation(cli, fmt) << '\n';
         }
-        
-        
     }
     else
     {
-        std::cout << usage_lines(cli, "omp_func") << '\n';
+        std::cout << usage() << '\n';
     }
 
     return 0;

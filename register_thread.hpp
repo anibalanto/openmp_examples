@@ -169,9 +169,9 @@ public:
 
     void registrate(const std::string &msg = "")
     {
+        auto time = chronometrate();
         #pragma omp critical
         {
-            auto time = chronometrate();
             _regs.push({
                 omp_get_num_threads(),
                 omp_get_thread_num(),
