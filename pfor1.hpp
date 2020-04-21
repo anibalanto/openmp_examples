@@ -4,7 +4,7 @@
 
 void pfor1()
 {
-    static constexpr int const& cant = 200000000;
+    static int const cant = 200000000;
     {
         RegisterThread regist("secuential");
         for (int i=1; i<cant; i++)
@@ -26,7 +26,9 @@ void pfor1()
     }
 }
 
+//
+/*;
 FunctionLoaded load_pfor1()
 {
     return {"pfor1", pfor1};
-}
+}*/

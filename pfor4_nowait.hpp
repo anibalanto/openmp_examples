@@ -5,7 +5,7 @@
 
 void pfor4_nowait()
 {
-    static constexpr int const& cant = 30;
+    static int const cant = 30;
     {
         RegisterThread regist("parallel");
         omp_set_nested(1);

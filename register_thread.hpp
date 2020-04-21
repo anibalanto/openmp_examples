@@ -11,6 +11,15 @@
 
 #include "table.hpp"
 
+std::string to_string(int istart, int ipoints)
+{
+    return "["
+            + std::to_string(istart)
+            + ": "
+            + std::to_string(istart + ipoints)
+            + "]";
+}
+
 class VisualThreadId
 {
     int _n_ths;
@@ -46,9 +55,11 @@ public:
     
     friend inline std::ostream& operator<<(std::ostream& os, ThreadId &ntid)  
     { 
-        std::string id = std::to_string(ntid._th_n)
-                         + ":" +
-                         std::to_string(ntid._n_ths);
+        std::string id =  "["
+                        + std::to_string(ntid._n_ths)
+                        + ":"
+                        + std::to_string(ntid._th_n)
+                        + "]";
         os << id;
         return os;
     }
@@ -117,10 +128,10 @@ class RegisterThread
     bool _initialized, _finalized = false;
     
 public:
-    RegisterThread(const std::string & name) :
+    RegisterThread(const std::string & name, int max_num_ths = 8) :
     _name {name},
     _start {std::chrono::system_clock::now()},
-    _t {{8, 6, 16, 27}}
+    _t {{13, 6, max_num_ths + 1, 27}}
     { }
     
     ~RegisterThread()
@@ -129,10 +140,9 @@ public:
         {
             std::cout << "begin {" << _name << "}"
                       << std::endl
-                      //<< column(0) << "#"
-                      << _t.header(0) << "vt"
+                      << _t.header(0) << "time"
                       << _t.header(1) << "tid"
-                      << _t.header(2) << "time"
+                      << _t.header(2) << "vt"
                       << _t.header(3) << "message"
                       << std::endl;
               
@@ -141,10 +151,9 @@ public:
                 auto r = _regs.front();
                 VisualThreadId vtid(r.n_ths, r.th_n);
                 ThreadId tid(r.n_ths, r.th_n);
-                //std::cout << _t.column(0) << r.reg_id
-                std::cout << _t.column(0) << vtid
+                std::cout << _t.column(0) << r.diff
                           << _t.column(1) << tid
-                          << _t.column(2) << r.diff
+                          << _t.column(2) << vtid
                           << _t.column(3) << r.msg
                           << std::endl;
                 _regs.pop();

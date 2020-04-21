@@ -4,7 +4,7 @@
 
 void pfor3_single_master()
 {
-    static constexpr int const& rep = 5;
+    static int const rep = 5;
     {
         RegisterThread regist("singel_master");
         omp_set_nested(1);

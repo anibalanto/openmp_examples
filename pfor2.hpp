@@ -2,20 +2,16 @@
 #include "register_thread.hpp"
 #include "function_loaded.hpp"
 
-std::string to_string(int istart, int ipoints)
-{
-    return "from " + std::to_string(istart) + " to " + std::to_string(istart + ipoints);
-}
-
 void pfor2()
 {
-    static constexpr int const& cant = 900000000;
+    static int const cant = 900000000;
     {
         RegisterThread regist("secuential");
         regist.registrate("begin > " + to_string(0, cant));
         for (int i = 0; i < cant; i++);
         regist.registrate("end   > " + to_string(0, cant));
     }
+    
     {
         RegisterThread regist("parallel");
         int npoints = cant;
@@ -31,13 +27,17 @@ void pfor2()
                 ipoints = npoints - istart;
             }
             regist.registrate("begin > " + to_string(istart, ipoints));
-            for (int i = 0; i < ipoints; i++);
-            regist.registrate("end   > " + to_string(istart, ipoints));
+            int i = 0;
+            for ( ; i < ipoints; i++);
+            regist.registrate("end   > i= "
+                            + std::to_string(i)
+                            + " "
+                            + to_string(istart, ipoints));
         }
-    }    
+    }
 }
-
-FunctionLoaded load_pfor2()
+//functions.push_bnack(LOADER(pfor2));
+/*FunctionLoaded load_pfor2()
 {
     return {"pfor2", pfor2};
-}
+}*/

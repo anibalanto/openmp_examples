@@ -2,12 +2,15 @@
 
 #include "function_loaded.hpp"
 
+#include "phello_omp.hpp"
 #include "pfor1.hpp"
 #include "pfor2.hpp"
 #include "pfor3_single_master.hpp"
 #include "pfor4_nowait.hpp"
 #include "psections.hpp"
 #include "ptask.hpp"
+#include "pnumerical_integration.hpp"
+
 
 #include "clipp.h"
 #include "table.hpp"
@@ -19,19 +22,21 @@ static string soft_name = "omp_examp";
 
 int main(int argc, char* argv[])
 {
-    vector<FunctionLoaded> functions { { load_pfor1(),
-                                         load_pfor2(),
-                                         load_pfor3_single_master(),
-                                         load_pfor4_nowait(),
-                                         load_psections(),
-                                         load_ptask()} };
+    vector<FunctionLoaded> functions { { loader(phello_omp),
+                                         loader(pfor1),
+                                         loader(pfor2),
+                                         loader(pfor3_single_master),
+                                         loader(pfor4_nowait),
+                                         loader(psections),
+                                         loader(ptask),
+                                         loader(pnumerical_integration) } };
 
     int fn = -1;
     bool list = false,
          help = false;
 
     auto cli = group ( 
-        option("-n", "--number") & value("fnum", fn).doc("number of function to execute"),
+        opt_value("fnum", fn).doc("number of function to execute"),
         option("-l", "--list").set(list).doc("list functions"),
         option("-h", "--help").set(help).doc("help")
      );
