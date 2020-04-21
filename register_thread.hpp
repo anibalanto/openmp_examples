@@ -23,20 +23,25 @@ std::string to_string(int istart, int ipoints)
 class VisualThreadId
 {
     int _n_ths;
+    int _max_n_ths;
     int _th_n;
 public:
-    VisualThreadId(int n_ths, int th_n) :
+    VisualThreadId(int n_ths, int max_n_ths, int th_n) :
         _n_ths{n_ths},
+        _max_n_ths{max_n_ths},
         _th_n{th_n}
     { }
     
     friend inline std::ostream& operator<<(std::ostream& os, VisualThreadId &vtid)
     { 
         std::string svid = "";
-        for (int i = 0; i < vtid._n_ths; i++)
+        for (int i = 0; i < vtid._max_n_ths; i++)
         {
             //if i is equal to thread number writes "*" else will write "|"
-            svid += (i == vtid._th_n)? "*" : "|";
+            svid += (i <  vtid._th_n)?  "│ "                     : 
+                    (i == vtid._th_n)?  std::to_string(i) + "━"  :
+                    (i <  vtid._n_ths)? "┿━"                     :
+                                        "━━";
         }
         os << std::left << svid;
         return os;
@@ -118,6 +123,7 @@ class RegisterThread
     std::queue<DataRegister> _regs;
 
     std::string _name;
+    int _max_n_ths;
     int _reg_count = 0;
     Table _t;
     std::chrono::system_clock::time_point _start, _end;
@@ -128,10 +134,11 @@ class RegisterThread
     bool _initialized, _finalized = false;
     
 public:
-    RegisterThread(const std::string & name, int max_num_ths = 8) :
+    RegisterThread(const std::string & name, int max_n_ths = 8) :
     _name {name},
+    _max_n_ths{max_n_ths},
     _start {std::chrono::system_clock::now()},
-    _t {{13, 6, max_num_ths + 1, 27}}
+    _t {{13, 6, 3 * max_n_ths + 1, 27}}
     { }
     
     ~RegisterThread()
@@ -149,7 +156,7 @@ public:
              while (!_regs.empty())
              {
                 auto r = _regs.front();
-                VisualThreadId vtid(r.n_ths, r.th_n);
+                VisualThreadId vtid(r.n_ths, _max_n_ths, r.th_n);
                 ThreadId tid(r.n_ths, r.th_n);
                 std::cout << _t.column(0) << r.diff
                           << _t.column(1) << tid
