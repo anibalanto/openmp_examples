@@ -11,15 +11,10 @@
 #include "p6sections.hpp"
 #include "p7task.hpp"
 #include "p8sin_integration.hpp"
+#include "pproducer_consumer.hpp"
 
 #include "clipp.h"
 #include "table.hpp"
-
-#include "joaquin/p0hola_openmp.hpp"
-#include "Juan/p0hola_openmp.hpp"
-#include "Rocío/p0hola_openmp.hpp"
-#include "Luciana/p0hola_openmp.hpp"
-#include "GastonMigone/phello_omp_gaston.hpp"
 
 using namespace std;
 using namespace clipp;
@@ -40,11 +35,7 @@ int main(int argc, char* argv[])
             loader(psections),
             loader(ptask),
             loader(psin_integration),
-            loader(phello_omp_juan),
-            loader(phello_omp_gaston),
-            loader(phello_omp_rocio),
-            loader(phello_omp_joaquin),
-            loader(phello_omp_Luciana) } };
+            loader(pproducer_consumer) } };
 
     int fn = -1;
     bool list = false,
