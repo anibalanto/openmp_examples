@@ -2,18 +2,24 @@
 
 #include "function_loaded.hpp"
 
-#include "phello_omp.hpp"
-#include "pfor1.hpp"
-#include "pfor2.hpp"
-#include "pfor3_single_master.hpp"
-#include "pfor4_nowait.hpp"
-#include "psections.hpp"
-#include "ptask.hpp"
-#include "pnumerical_integration.hpp"
-
+#include "p0hola_openmp.hpp"
+#include "p1for.hpp"
+#include "p2for.hpp"
+#include "p3numerical_integration.hpp"
+#include "p4for_single_master.hpp"
+#include "p5for_nowait.hpp"
+#include "p6sections.hpp"
+#include "p7task.hpp"
+#include "p8sin_integration.hpp"
 
 #include "clipp.h"
 #include "table.hpp"
+
+#include "joaquin/p0hola_openmp.hpp"
+#include "Juan/p0hola_openmp.hpp"
+#include "Rocío/p0hola_openmp.hpp"
+#include "Luciana/p0hola_openmp.hpp"
+#include "GastonMigone/phello_omp_gaston.hpp"
 
 using namespace std;
 using namespace clipp;
@@ -22,14 +28,23 @@ static string soft_name = "omp_examp";
 
 int main(int argc, char* argv[])
 {
-    vector<FunctionLoaded> functions { { loader(phello_omp),
-                                         loader(pfor1),
-                                         loader(pfor2),
-                                         loader(pfor3_single_master),
-                                         loader(pfor4_nowait),
-                                         loader(psections),
-                                         loader(ptask),
-                                         loader(pnumerical_integration) } };
+    vector<FunctionLoaded> functions 
+        { { loader(phola_openmp),
+            loader(pcritical_hola_openmp),
+            loader(phello_omp),
+            loader(pfor1),
+            loader(pfor2),
+            loader(pnumerical_integration),
+            loader(pfor3_single_master),
+            loader(pfor4_nowait),
+            loader(psections),
+            loader(ptask),
+            loader(psin_integration),
+            loader(phello_omp_juan),
+            loader(phello_omp_gaston),
+            loader(phello_omp_rocio),
+            loader(phello_omp_joaquin),
+            loader(phello_omp_Luciana) } };
 
     int fn = -1;
     bool list = false,

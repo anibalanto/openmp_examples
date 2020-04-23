@@ -35,13 +35,13 @@ public:
     friend inline std::ostream& operator<<(std::ostream& os, VisualThreadId &vtid)
     { 
         std::string svid = "";
-        for (int i = 0; i < vtid._max_n_ths; i++)
+        for (int i = 0; i < vtid._max_n_ths + 1; i++)
         {
             //if i is equal to thread number writes "*" else will write "|"
-            svid += (i <  vtid._th_n)?  "│ "                     : 
-                    (i == vtid._th_n)?  std::to_string(i) + "━"  :
-                    (i <  vtid._n_ths)? "┿━"                     :
-                                        "━━";
+            svid += (i <  vtid._th_n)?  " │"                     : 
+                    (i == vtid._th_n)?  " " + std::to_string(i)  :
+                    (i <  vtid._n_ths)? " │"                     :
+                                        "  ";
         }
         os << std::left << svid;
         return os;
@@ -138,7 +138,7 @@ public:
     _name {name},
     _max_n_ths{max_n_ths},
     _start {std::chrono::system_clock::now()},
-    _t {{13, 6, 3 * max_n_ths + 1, 27}}
+    _t {{2 * max_n_ths + 1, 13, 27}}
     { }
     
     ~RegisterThread()
@@ -147,21 +147,21 @@ public:
         {
             std::cout << "begin {" << _name << "}"
                       << std::endl
-                      << _t.header(0) << "time"
-                      << _t.header(1) << "tid"
-                      << _t.header(2) << "vt"
-                      << _t.header(3) << "message"
+                      << _t.header(0) << "vt"
+                      //<< _t.header(1) << "tid"
+                      << _t.header(1) << "time"
+                      << _t.header(2) << "message"
                       << std::endl;
               
              while (!_regs.empty())
              {
                 auto r = _regs.front();
                 VisualThreadId vtid(r.n_ths, _max_n_ths, r.th_n);
-                ThreadId tid(r.n_ths, r.th_n);
-                std::cout << _t.column(0) << r.diff
-                          << _t.column(1) << tid
-                          << _t.column(2) << vtid
-                          << _t.column(3) << r.msg
+                //ThreadId tid(r.n_ths, r.th_n);
+                std::cout << _t.column(0) << vtid
+                          //<< _t.column(1) << tid
+                          << _t.column(1) << r.diff
+                          << _t.column(2) << r.msg
                           << std::endl;
                 _regs.pop();
             }
