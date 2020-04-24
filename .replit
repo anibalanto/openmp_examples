@@ -1,0 +1,3 @@
+langauge= "cpp"
+
+run = "cd build && cmake ../ && cmake --build . && ./ompe --list"

@@ -51,7 +51,7 @@ EQUALS = =
 CMAKE_SOURCE_DIR = /home/runner/openmpexamples
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/runner/openmpexamples
+CMAKE_BINARY_DIR = /home/runner/openmpexamples/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/openmpexamples/CMakeFiles /home/runner/openmpexamples/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/openmpexamples/build/CMakeFiles /home/runner/openmpexamples/build/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/openmpexamples/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/openmpexamples/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target

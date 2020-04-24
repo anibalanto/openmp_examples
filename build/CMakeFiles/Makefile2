@@ -57,7 +57,7 @@ EQUALS = =
 CMAKE_SOURCE_DIR = /home/runner/openmpexamples
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/runner/openmpexamples
+CMAKE_BINARY_DIR = /home/runner/openmpexamples/build
 
 #=============================================================================
 # Target rules for target CMakeFiles/ompe.dir
@@ -66,7 +66,7 @@ CMAKE_BINARY_DIR = /home/runner/openmpexamples
 CMakeFiles/ompe.dir/all:
 	$(MAKE) -f CMakeFiles/ompe.dir/build.make CMakeFiles/ompe.dir/depend
 	$(MAKE) -f CMakeFiles/ompe.dir/build.make CMakeFiles/ompe.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/runner/openmpexamples/CMakeFiles --progress-num=1,2 "Built target ompe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/runner/openmpexamples/build/CMakeFiles --progress-num=1,2 "Built target ompe"
 .PHONY : CMakeFiles/ompe.dir/all
 
 # Include target in all.
@@ -76,9 +76,9 @@ all: CMakeFiles/ompe.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/ompe.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/openmpexamples/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/openmpexamples/build/CMakeFiles 2
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/ompe.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/openmpexamples/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/openmpexamples/build/CMakeFiles 0
 .PHONY : CMakeFiles/ompe.dir/rule
 
 # Convenience name for target.
