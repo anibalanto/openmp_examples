@@ -139,9 +139,6 @@ public:
     _max_n_ths{max_n_ths},
     _start {std::chrono::system_clock::now()},
     _t {{2 * max_n_ths + 1, 13, 27}}
-    { }
-    
-    ~RegisterThread()
     {
         #pragma omp critical
         {
@@ -152,7 +149,13 @@ public:
                       << _t.header(1) << "time"
                       << _t.header(2) << "message"
                       << std::endl;
-              
+        }
+    }
+    
+    ~RegisterThread()
+    {
+        #pragma omp critical
+        {   
              while (!_regs.empty())
              {
                 auto r = _regs.front();
@@ -181,13 +184,15 @@ public:
                       << "-----------------------------------------------------"
                       << std::endl;
         }
-    }
+    } 
 
     void registrate(const std::string &msg = "")
     {
-        auto time = chronometrate();
+        //mejorar
+        //https://stackoverflow.com/questions/8446374/c-stream-as-a-member-variable
         #pragma omp critical
         {
+            auto time = chronometrate();
             _regs.push({
                 omp_get_num_threads(),
                 omp_get_thread_num(),
