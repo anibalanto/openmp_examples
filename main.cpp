@@ -7,6 +7,7 @@
 #include "p2for.hpp"
 #include "p3numerical_integration.hpp"
 #include "p4for_single_master.hpp"
+#include "p4.1nested.hpp"
 #include "p5for_nowait.hpp"
 #include "p6sections.hpp"
 #include "p7task.hpp"
@@ -31,6 +32,7 @@ int main(int argc, char* argv[])
             loader(pfor2),
             loader(pnumerical_integration),
             loader(pfor3_single_master),
+            loader(pnested),
             loader(pfor4_nowait),
             loader(psections),
             loader(ptask),

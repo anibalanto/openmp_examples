@@ -59,6 +59,8 @@ p3numerical_integration.hpp
 /home/runner/openmpexamples/p3numerical_integration.hpp
 p4for_single_master.hpp
 /home/runner/openmpexamples/p4for_single_master.hpp
+p4.1nested.hpp
+/home/runner/openmpexamples/p4.1nested.hpp
 p5for_nowait.hpp
 /home/runner/openmpexamples/p5for_nowait.hpp
 p6sections.hpp
@@ -97,6 +99,10 @@ register_thread.hpp
 /home/runner/openmpexamples/register_thread.hpp
 function_loaded.hpp
 /home/runner/openmpexamples/function_loaded.hpp
+
+/home/runner/openmpexamples/p4.1nested.hpp
+register_thread.hpp
+/home/runner/openmpexamples/register_thread.hpp
 
 /home/runner/openmpexamples/p4for_single_master.hpp
 register_thread.hpp

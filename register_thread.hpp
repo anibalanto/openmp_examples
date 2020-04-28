@@ -124,6 +124,7 @@ class RegisterThread
 
     std::string _name;
     int _max_n_ths;
+    bool _v_time;
     int _reg_count = 0;
     Table _t;
     std::chrono::system_clock::time_point _start, _end;
@@ -134,9 +135,10 @@ class RegisterThread
     bool _initialized, _finalized = false;
     
 public:
-    RegisterThread(const std::string & name, int max_n_ths = 8) :
+    RegisterThread(const std::string & name, int max_n_ths = 8, bool v_time = true) :
     _name {name},
     _max_n_ths{max_n_ths},
+    _v_time {v_time},
     _start {std::chrono::system_clock::now()},
     _t {{2 * max_n_ths + 1, 13, 27}}
     { }
@@ -147,10 +149,12 @@ public:
         {
             std::cout << "begin {" << _name << "}"
                       << std::endl
-                      << _t.header(0) << "vt"
-                      //<< _t.header(1) << "tid"
-                      << _t.header(1) << "time"
-                      << _t.header(2) << "message"
+                      << _t.header(0) << "vt";
+            if(_v_time)
+            {
+                std::cout << _t.header(1) << "time";
+            }
+            std::cout << _t.header(2) << "message"
                       << std::endl;
               
              while (!_regs.empty())
@@ -158,11 +162,13 @@ public:
                 auto r = _regs.front();
                 VisualThreadId vtid(r.n_ths, _max_n_ths, r.th_n);
                 //ThreadId tid(r.n_ths, r.th_n);
-                std::cout << _t.column(0) << vtid
-                          //<< _t.column(1) << tid
-                          << _t.column(1) << r.diff
-                          << _t.column(2) << r.msg
-                          << std::endl;
+                std::cout << _t.column(0) << vtid;
+                if(_v_time)
+                {
+                    std::cout << _t.column(1) << r.diff;
+                }
+                std::cout  << _t.column(2) << r.msg
+                           << std::endl;
                 _regs.pop();
             }
         
