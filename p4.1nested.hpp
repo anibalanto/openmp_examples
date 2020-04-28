@@ -1,5 +1,18 @@
+/*
+ * Ejemplo OpenMP
+ * NestedThreads
+ *
+ * Documentación: https://docs.oracle.com/cd/E19205-01/819-5270/aewbc/index.html
+ *
+ * @autor Anibal Fernando Antonelli
+ * Catedra: Sistemas De Computación Distribuidos
+ * Facultad de Ingeniería
+ * Universidad Nacional de Mar del Plata
+ */
+
 #pragma once
 #include "register_thread.hpp"
+
 
 std::string show_ths_ids(int first, int second = -1, int third = -1)
 {
