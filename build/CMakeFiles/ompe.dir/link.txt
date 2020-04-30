@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/ompe.dir/main.cpp.o  -o ompe /usr/lib/gcc/x86_64-linux-gnu/7/libgomp.so -lpthread 
