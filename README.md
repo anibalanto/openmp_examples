@@ -8,9 +8,9 @@ Puedes directamente ejecutar desde el navegador Web:
 O sino... lo siguiente:
 
 ## Prerequisitos
-Para la *Compilación gcc* tener instalado gcc.
+Para la **Compilación gcc** tener instalado gcc.
 
-Para la *Compilación CMake* tener instalado CMake y algún compilador de C++.
+Para la **Compilación CMake** tener instalado CMake y algún compilador de C++.
 
 
 ## Clonar proyecto
@@ -19,17 +19,14 @@ En una terminal vamos a la carpeta donde queremos que esté el proyecto.
 git clone https://github.com/anibalanto/openmp_examples
 ```
 ## Compilación GCC
-Entramos la carpeta build del proyecto:
+Corremos `g++` para compilar
 ```
-cd build
-```
-Desde allí corremos `g++` para compilar
-```
-g++ -fopenmp ../main.cpp -o ompe
+g++ -fopenmp main.cpp -o ompe
 ```
 ## Compilación CMake
-Entramos la carpeta build del proyecto:
+Creamos la carpeta build dentro del proyecto y nos colocamos dentro:
 ```
+mkdir build
 cd build
 ```
 Desde allí corremos CMake para compilar:
