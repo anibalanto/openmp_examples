@@ -29,7 +29,7 @@
 using namespace std;
 using namespace clipp;
 
-static string soft_name = "omp_examp";
+static string soft_name = "ompe";
 
 int main(int argc, char* argv[])
 {
