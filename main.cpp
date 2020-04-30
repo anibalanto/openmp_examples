@@ -1,3 +1,12 @@
+/*
+ * OpenMP Example
+ * 
+ * @autor Anibal Fernando Antonelli
+ * Catedra: Sistemas De Computación Distribuidos
+ * Facultad de Ingeniería
+ * Universidad Nacional de Mar del Plata
+ */
+
 #include <vector>
 
 #include "function_loaded.hpp"
