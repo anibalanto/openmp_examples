@@ -5,6 +5,10 @@ Puedes directamente ejecutar desde el navegador Web:
 [![Run on Repl.it](https://repl.it/badge/github/anibalanto/openmp_examples)](https://repl.it/github/anibalanto/openmp_examples)
 
 O sino... lo siguiente:
+
+## Prerequisitos
+Tener instalado un compilador el compilador de C++ y CMake.
+
 ## Clonar proyecto
 En una terminal vamos a la carpeta donde queremos que esté el proyecto.
 ```
