@@ -91,6 +91,10 @@ int main(int argc, char* argv[])
             std::cout << usage() << '\n';
             std::cout << documentation(cli, fmt) << '\n';
         }
+        if(fn < 0 && !list && !help)
+        {
+            std::cout << usage() << '\n';
+        }
     }
     else
     {

@@ -2,22 +2,38 @@
 El siguiente proyecto C++ intenta mostrar en una consola como trabajan los hilos de OpenMP visualmente a través del registro de mensajes que le pasa el usuario.
 
 Puedes directamente ejecutar desde el navegador Web:
+
 [![Run on Repl.it](https://repl.it/badge/github/anibalanto/openmp_examples)](https://repl.it/github/anibalanto/openmp_examples)
 
 O sino... lo siguiente:
 
 ## Prerequisitos
-Tener instalado un compilador el compilador de C++ y CMake.
+Para la *Compilación gcc* tener instalado gcc.
+
+Para la *Compilación CMake* tener instalado CMake y algún compilador de C++.
+
 
 ## Clonar proyecto
 En una terminal vamos a la carpeta donde queremos que esté el proyecto.
 ```
 git clone https://github.com/anibalanto/openmp_examples
 ```
-## Compilación
-Entramos al proyecto, una vez allí a la carpeta build:
+## Compilación GCC
+Entramos la carpeta build del proyecto:
 ```
 cd build
+```
+Desde allí corremos `g++` para compilar
+```
+g++ -fopenmp ../main.cpp -o ompe
+```
+## Compilación CMake
+Entramos la carpeta build del proyecto:
+```
+cd build
+```
+Desde allí corremos CMake para compilar:
+```
 cmake ..
 cmake --build .
 ```
