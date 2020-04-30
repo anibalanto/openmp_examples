@@ -1,13 +1,13 @@
 # OpenMP Examples (ompe)
-El siguiente proyecto C++ intenta mostrar en una consola como trabaja OpenMP a traves de una visualización por conosla de los hilos generados y mesajes que pasa el usuario.
+El siguiente proyecto C++ intenta mostrar en una consola como trabajan los hilos de OpenMP visualmente a través del registro de mensajes que le pasa el usuario.
 
 ## Clonar proyecto
-En una terminal vamos a la carpeta que deseamos que deseamos que esté el proyecto.
+En una terminal vamos a la carpeta donde queremos que esté el proyecto.
 ```
 git clone https://github.com/anibalanto/openmp_examples
 ```
 ## Compilación
-Dentro del proyecto escribimos:
+Entramos al proyecto, una vez allí a la carpeta build:
 ```
 cd build
 cmake ..
@@ -15,7 +15,7 @@ cmake --build .
 ```
 
 ## Uso
-Dentro de la carpeta `/build` se encuentra el comando ejecutable.
+Dentro de la carpeta `/build` se encontrá el archivo del comando ejecutable con el nombre `ompe`.
 Para ver la ayuda del comando utilizamos la opción `-h` o `--help`:
 ```
 ./ompe -h
