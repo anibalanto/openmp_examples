@@ -1,6 +1,8 @@
 # OpenMP Examples (ompe)
 El siguiente proyecto C++ intenta mostrar en una consola como trabajan los hilos de OpenMP visualmente a través del registro de mensajes que le pasa el usuario.
 
+[![Ejecutar en Repl.it](https://repl.it/badge/github/anibalanto/openmp_examples)](https://repl.it/github/anibalanto/openmp_examples)
+
 ## Clonar proyecto
 En una terminal vamos a la carpeta donde queremos que esté el proyecto.
 ```
