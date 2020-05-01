@@ -1,3 +1,0 @@
-/home/runner/openmpexamples/build/CMakeFiles/rebuild_cache.dir
-/home/runner/openmpexamples/build/CMakeFiles/ompe.dir
-/home/runner/openmpexamples/build/CMakeFiles/edit_cache.dir

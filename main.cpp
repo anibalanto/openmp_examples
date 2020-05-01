@@ -20,7 +20,7 @@
 using namespace std;
 using namespace clipp;
 
-static string soft_name = "omp_examp";
+static string soft_name = "ompe";
 
 int main(int argc, char* argv[])
 {
@@ -44,34 +44,15 @@ int main(int argc, char* argv[])
          help = false;
 
     auto cli = group ( 
-        opt_value("fnum", fn).doc("number of function to execute"),
-        option("-l", "--list").set(list).doc("list functions"),
-        option("-h", "--help").set(help).doc("help")
+        opt_value("fnum", fn).doc("Número de función a ejecutar"),
+        option("-l", "--list").set(list).doc("Lista de funciones con su número de función"),
+        option("-h", "--help").set(help).doc("Ayuda")
      );
 
     auto usage = [&cli, &argv]() { return usage_lines(cli, soft_name); };
 
     if(parse(argc, argv, cli))
     {
-        if(fn >= 0 && fn < functions.size())
-        {
-            functions[fn].func();
-        }
-        if (list)
-        {
-            Table t {{6, 20}};
-
-            std::cout << t.header(0) << "num"
-                      << t.header(1) << "name"
-                      << std::endl;
-
-            for (auto i = 0; i < functions.size(); i++)
-            {
-                std::cout << t.column(0) << i
-                          << t.column(1) << functions[i].name
-                          << std::endl;
-            }
-        }
         if(help)
         {
             auto fmt = doc_formatting{}
@@ -79,13 +60,44 @@ int main(int argc, char* argv[])
                         .doc_column(15)
                         .last_column(99);
 
-            std::cout << usage() << '\n';
-            std::cout << documentation(cli, fmt) << '\n';
+            std::cout << "uso:" << usage() << '\n';
+            std::cout << "Estos son comandos de ompe (OpenMP Example)\n"
+                      << documentation(cli, fmt) << '\n';
+        }
+        else
+        {
+            if(fn >= 0)
+            {
+                if(fn < functions.size())
+                {
+                    functions[fn].func();
+                }
+                else
+                {
+                    std::cout << "No existe ese numero de función\n";
+                }
+            }
+            if (list)
+            {
+                Table t {{6, 20}};
+
+                std::cout << "Número función con su respectivo nombre\n";
+                std::cout << t.header(0) << "fnum"
+                          << t.header(1) << "Nombre"
+                          << std::endl;
+
+                for (auto i = 0; i < functions.size(); i++)
+                {
+                    std::cout << t.column(0) << i
+                              << t.column(1) << functions[i].name
+                              << std::endl;
+                }
+            }
         }
     }
     else
     {
-        std::cout << usage() << '\n';
+        std::cout << "uso: " << usage() << '\n';
     }
 
     return 0;
