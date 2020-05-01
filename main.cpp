@@ -1,3 +1,12 @@
+/*
+ * OpenMP Example
+ * 
+ * @autor Anibal Fernando Antonelli
+ * Catedra: Sistemas De Computación Distribuidos
+ * Facultad de Ingeniería
+ * Universidad Nacional de Mar del Plata
+ */
+
 #include <vector>
 
 #include "function_loaded.hpp"
@@ -93,6 +102,10 @@ int main(int argc, char* argv[])
                               << std::endl;
                 }
             }
+        }
+        if(fn < 0 && !list && !help)
+        {
+            std::cout << usage() << '\n';
         }
     }
     else
