@@ -6,24 +6,19 @@ Puedes directamente ejecutar desde el navegador Web:
 [![Run on Repl.it](https://repl.it/badge/github/anibalanto/openmp_examples)](https://repl.it/github/anibalanto/openmp_examples)
 
 O sino... lo siguiente:
-
-## Prerequisitos
-Para la **Compilación gcc** tener instalado gcc.
-
-Para la **Compilación CMake** tener instalado CMake y algún compilador de C++.
-
-
 ## Clonar proyecto
 En una terminal vamos a la carpeta donde queremos que esté el proyecto.
 ```
 git clone https://github.com/anibalanto/openmp_examples
 ```
 ## Compilación GCC
+(Es ncesario tener instalado GCC)
 Corremos `g++` para compilar
 ```
 g++ -fopenmp main.cpp -o ompe
 ```
 ## Compilación CMake
+(Es necesario tener instaldo CMake)
 Creamos la carpeta build dentro del proyecto y nos colocamos dentro:
 ```
 mkdir build
