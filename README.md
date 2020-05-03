@@ -41,7 +41,7 @@ Para ver la ayuda del comando utilizamos la opción `-h` o `--help`:
 ```
 ./ompe -h
 ```
-Se imprimirá:
+Esto mostrará el uso general del comando con el detalle de cada una de las opciones:
 ```
 uso:        ompe [<fnum>] [-l] [-h]
 Estos son comandos de ompe (OpenMP Example)
@@ -52,7 +52,7 @@ Estos son comandos de ompe (OpenMP Example)
        -h, --help
                Ayuda
 ```
-Con la opción `-l` o `--list` se listarán todas las funciones con ejemplos y su valor `fnum` con el que se puede ejecutar. Por ejemplo, para ejecutar la función número 3 simplemente escribimos:
+Con la opción `-l` o `--list` se listarán todas las funciones con ejemplos y su valor `fnum` con el cual se puede ejecutar. Por ejemplo, para ejecutar la función número 3 simplemente escribimos:
 
 ```
 ./ompe 3
