@@ -15,13 +15,13 @@
 #include "p1for.hpp"
 #include "p2for.hpp"
 #include "p3numerical_integration.hpp"
-#include "p4for_single_master.hpp"
 #include "p4.1nested.hpp"
 #include "p5for_nowait.hpp"
 #include "p6sections.hpp"
 #include "p7task.hpp"
 #include "p8sin_integration.hpp"
 #include "pproducer_consumer.hpp"*/
+#include "../examples/p4for_single_master.hpp"
 #include "../examples/p4.2nested.hpp"
 
 #include "../include/ompe/clipp.h"
@@ -48,7 +48,8 @@ int main(int argc, char* argv[])
             loader(ptask),
             loader(psin_integration),
             loader(pproducer_consumer)*/
-            loader(pnested2) } };
+            loader(pnested_compare),
+            loader(p4for_single_master) } };
 
     int fn = -1;
     bool list = false,

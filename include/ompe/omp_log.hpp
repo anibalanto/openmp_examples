@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <set>
 #include <deque>
@@ -12,12 +14,6 @@
 #include <thread>
 #include <ctime>
 #include <omp.h>
-
-//stumb omp
-/*void omp_set_nested(int)    { }
-void omp_set_dynamic(int)   { }
-int omp_get_num_threads()   { return 1; }
-int omp_get_thread_num()    { return 0; }*/
 
 namespace omp_log {
 
@@ -808,7 +804,9 @@ protected:
 };
 
 
-enum class msg { end };
+enum class log_msg { end };
+
+log_msg endl() { return log_msg::end; }
 
 class stream_logger
 {
@@ -844,9 +842,10 @@ public:
         return sm;
     }
 
-    friend stream_logger& operator<<(stream_logger& sm, const msg& em)
+    friend stream_logger& operator<<(stream_logger& sm, const log_msg& op)
     {
-        sm.th_log.message();
+        if( op == log_msg::end )
+            sm.th_log.message();
         return sm;
     }
 };
