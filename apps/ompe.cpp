@@ -1,6 +1,6 @@
 /*
  * OpenMP Example
- * 
+ *
  * @autor Anibal Fernando Antonelli
  * Catedra: Sistemas De Computación Distribuidos
  * Facultad de Ingeniería
@@ -9,9 +9,9 @@
 
 #include <vector>
 
-#include "function_loaded.hpp"
+#include "../include/ompe/function_loaded.hpp"
 
-#include "p0hola_openmp.hpp"
+/*#include "p0hola_openmp.hpp"
 #include "p1for.hpp"
 #include "p2for.hpp"
 #include "p3numerical_integration.hpp"
@@ -21,10 +21,11 @@
 #include "p6sections.hpp"
 #include "p7task.hpp"
 #include "p8sin_integration.hpp"
-#include "pproducer_consumer.hpp"
+#include "pproducer_consumer.hpp"*/
+#include "../examples/p4.2nested.hpp"
 
-#include "clipp.h"
-#include "table.hpp"
+#include "../include/ompe/clipp.h"
+#include "../include/ompe/table.hpp"
 
 using namespace std;
 using namespace clipp;
@@ -33,8 +34,8 @@ static string soft_name = "ompe";
 
 int main(int argc, char* argv[])
 {
-    vector<FunctionLoaded> functions 
-        { { loader(phola_openmp),
+    vector<FunctionLoaded> functions
+        { { /*loader(phola_openmp),
             loader(pcritical_hola_openmp),
             loader(phello_omp),
             loader(pfor1),
@@ -46,13 +47,14 @@ int main(int argc, char* argv[])
             loader(psections),
             loader(ptask),
             loader(psin_integration),
-            loader(pproducer_consumer) } };
+            loader(pproducer_consumer)*/
+            loader(pnested2) } };
 
     int fn = -1;
     bool list = false,
          help = false;
 
-    auto cli = group ( 
+    auto cli = group (
         opt_value("fnum", fn).doc("Número de función a ejecutar"),
         option("-l", "--list").set(list).doc("Lista de funciones con su número de función"),
         option("-h", "--help").set(help).doc("Ayuda")

@@ -665,16 +665,6 @@ public:
 
 class stream_logger;
 
-
-/*
- * Es necesario alguien que sepa cuando hay
- * fork, join, begin y end
- * de aqui se puede sacar el id
- * no es necesario darle ess responsabilidad
- * a stream_logger
- */
-
-
 class thread_log{
     thread_id id;
     int num;
@@ -818,26 +808,6 @@ protected:
 };
 
 
-/*void thread_deep_log::inc()
-{
-    actual++;
-
-    if(*(max) < actual)
-    {
-        *(max) = actual;
-        if(parent)
-            parent->get_deep().inc();
-    }
-}
-
-void thread_deep_log::dec()
-{
-    actual--;
-
-    if(parent)
-        parent->get_deep().dec();
-}*/
-
 enum class msg { end };
 
 class stream_logger
@@ -901,37 +871,3 @@ omp_log::stream_logger name             \
 auto &parent = name;            \
 omp_log::stream_logger name( parent )   \
 
-
-int main()
-{
-
-    omp_set_nested(0);
-    omp_set_dynamic(0);
-
-
-    omp_log_inic(log);
-    log << "first 1" << omp_log::msg::end;
-    #pragma omp parallel num_threads(2)
-    {
-        omp_log_inic_parented(log);
-        log << "first 2" << omp_log::msg::end;
-        #pragma omp parallel num_threads(4)
-        {
-            omp_log_inic_parented(log);
-            log << "first 3" << omp_log::msg::end;
-            #pragma omp parallel num_threads(4)
-            {
-                omp_log_inic_parented(log);
-                log << "first 4" << omp_log::msg::end;
-                for(int i = 0; i < 30; i++)
-                    log << "for 4:" << i << omp_log::msg::end;
-                log << "last 4" << omp_log::msg::end;
-            }
-            log << "last 3" << omp_log::msg::end;
-        }
-        log << "last 2" << omp_log::msg::end;
-    }
-    log << "last 1" << omp_log::msg::end;
-
-    return 0;
-}
