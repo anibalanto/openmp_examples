@@ -61,16 +61,16 @@ void pnested_compare()
 
     std::cout << std::endl
               << "----------" << std::endl;
-    std::cout << "nested = 0" << std::endl;
+    std::cout << "nested = 1" << std::endl;
 
-    omp_set_nested(0);
+    omp_set_nested(1);
     pnested();
 
     std::cout << std::endl
               << "----------" << std::endl;
-    std::cout << "nested = 1" << std::endl;
+    std::cout << "nested = 0" << std::endl;
 
-    omp_set_nested(1);
+    omp_set_nested(0);
     pnested();
 }
 

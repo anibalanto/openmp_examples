@@ -639,7 +639,9 @@ void show(const std::vector<event> &events)
             #ifdef omp_log_test
             std::cout << *th;
             #endif
-            std::cout << std::left << std::setw(th->get_dimension().deep * 2 + 4) << vis_id(id) << ": " << msg << "\n";
+            int id_width = th->get_dimension().deep * 2 + 10;
+            std::cout << std::left << std::setw(15) << vis_id(id);
+            std::cout << ": " << msg << "\n";
         }
         else
             std::cout << "thread don't found!";
