@@ -32,6 +32,8 @@ using namespace clipp;
 
 static string soft_name = "ompe";
 
+#define omp_log_test
+
 int main(int argc, char* argv[])
 {
     vector<FunctionLoaded> functions

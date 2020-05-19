@@ -21,11 +21,24 @@ class thread;
 
 using thread_id = std::deque<int>;
 
+
+struct thread_dimension
+{
+    int width;
+    int deep;
+
+    friend std::ostream& operator<<(std::ostream& os, const thread_dimension& dim)
+    {
+        os << "{w:" << dim.width << " d:" << dim.deep << "}";
+        return os;
+    }
+};
+
 class thread_team
 {
     std::vector< std::shared_ptr<thread> > threads;
 public:
-    thread_team(std::shared_ptr< std::vector< std::shared_ptr< int > > > deeps);
+    thread_team(std::shared_ptr<std::vector<std::shared_ptr<thread_dimension> > > dimensions);
 
     const std::vector< std::shared_ptr<thread> > & get_threads() const
     {
@@ -39,7 +52,7 @@ public:
         return find(*this, id);
     }
 
-    int get_deep() const;
+    //int get_width() const;
 private:
     std::shared_ptr<thread> find(thread_team &team, thread_id &th_id);
 };
@@ -47,12 +60,12 @@ private:
 class thread
 {
     int num;
-    int deep;
+    thread_dimension dimension;
     std::optional<thread_team> nested;
 public:
-    thread(int num, int deep) :
+    thread(int num, thread_dimension &dimension) :
         num{num},
-        deep{deep}
+        dimension{dimension}
     { }
 
     int get_num() const
@@ -60,9 +73,9 @@ public:
         return num;
     }
 
-    int get_deep() const
+    const thread_dimension &get_dimension() const
     {
-        return deep;
+        return dimension;
         /*if(nested)
         {
             return (*nested).get_size();
@@ -75,11 +88,11 @@ public:
         return nested;
     }
 
-    void fork(std::shared_ptr< std::vector< std::shared_ptr< int > > >  deeps)
+    void fork(std::shared_ptr< std::vector< std::shared_ptr< thread_dimension > > >  dimensions)
     {
         if(!nested)
         {
-            nested = {thread_team(deeps)};
+            nested = {thread_team(dimensions)};
         }
     }
 
@@ -98,34 +111,34 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const thread& th)
     {
-        os << "{n:" << th.num << " d:" << th.deep << "}";
+        os << "{num:" << th.num << " dim:" << th.dimension << "}";
         return os;
     }
 };
 
 
-thread_team::thread_team(std::shared_ptr<std::vector<std::shared_ptr<int> > > deeps) :
-    threads { deeps->size() }
+thread_team::thread_team(std::shared_ptr<std::vector<std::shared_ptr<thread_dimension> > > dimensions) :
+    threads { dimensions->size() }
 {
-    for(int i = 0; i < deeps->size(); i++)
+    for(int i = 0; i < dimensions->size(); i++)
     {
-        auto deep = (*deeps)[i];
-        if( deep )
-            threads[i] = std::make_shared<thread>( i, *(deep) ) ;
+        auto dimension = (*dimensions)[i];
+        if( dimension )
+            threads[i] = std::make_shared<thread>( i, *(dimension) ) ;
         else
-            threads[i] = std::make_shared<thread>(i, -10 );
+            std::cout << "null dimension!" << std::endl;
     }
 }
 
-int thread_team::get_deep() const
+/*int thread_team::get_width() const
 {
     int sz = 0;
     for(auto th : threads)
     {
-        sz += th->get_deep();
+        sz += th->get_width();
     }
     return sz;
-}
+}*/
 
 
 struct find_by_num {
@@ -177,31 +190,55 @@ std::shared_ptr<thread> thread_team::find(thread_team &team, thread_id &id)
 }
 
 
-std::string vis_id(  thread_id id )
+std::string vis_id( thread_id id)
 {
-    std::ostringstream  ss;
-    while( !id.empty() )
+    std::ostringstream  sparent_id;
+    std::ostringstream  s_id;
+
+    int num = id.front();
+    id.pop_front();
+
+    if( !id.empty() )
     {
-        ss << id.back() << ":";
-        id.pop_back();
+
+        while( !id.empty() )
+        {
+            sparent_id << id.back() << ".";
+            id.pop_back();
+        }
+
     }
-    return "[" + ss.str() + "]";
+
+    s_id << "(" << sparent_id.str() << "{" << num << "}" << ")";
+
+    return s_id.str();
 }
 
-std::string vis_deeps(std::shared_ptr<std::vector<std::shared_ptr<int> > > deeps)
+void vis_dimensions(std::shared_ptr<std::vector<std::shared_ptr<thread_dimension> > > dimensions,
+                           std::ostream & os)
 {
-    std::string vd = "dp:{";
-    for(int i = 0; i < deeps->size(); i++)
+    os << "dims:{";
+    for(int i = 0; i < dimensions->size(); i++)
     {
-        auto deep = (*deeps)[i];
-        if( deep )
-            vd += std::to_string( *(deep) );
+        auto dim = (*dimensions)[i];
+        if( dim )
+        {
+            os << *dim;
+        }
         else
-            vd += "n";
-        vd += ", ";
+            os << "n";
+        os << ", ";
     }
-    vd += "}";
-    return vd;
+    os << "}";
+}
+std::string vis_space(std::shared_ptr<thread> th, const std::string &str)
+{
+    std::string v = str;
+    for(int i = 0; i < th->get_dimension().width - 1; i++)
+    {
+        v += str + str;
+    }
+    return v;
 }
 
 class thread_team_visual
@@ -217,9 +254,7 @@ public:
     std::ostream& vis(std::ostream& os)
     {
         thread_id actual_id;
-        vis(team, actual_id, id, false, os);
-        os << vis_id( id ) << " >";
-        return os;
+        return vis(team, actual_id, id, false, os);
     }
 
 protected:
@@ -248,23 +283,13 @@ protected:
                     vis(*team, actual_id, find_id, finded, os);
                 else
                 {
-                    os << "│ " << vis(th->get_deep() - 1, " ");
+                    os << "│" << vis_space(th, " ");
                 }
             }
 
             actual_id.pop_front();
         }
         return os;
-    }
-
-    std::string vis(int rep, const std::string &str)
-    {
-        std::string v = "";
-        for(int i = 0; i < rep; i++)
-        {
-            v += str + str;
-        }
-        return v;
     }
 
     virtual std::string vis_actual( std::shared_ptr<thread> & th) = 0;
@@ -286,7 +311,7 @@ protected:
 
     std::string vis_actual( std::shared_ptr<thread> &   th ) override
     {
-        return std::to_string( th->get_num() ) + " " + vis(th->get_deep() - 1, " ");//vis_space(th);
+        return std::to_string( th->get_num() ) + vis_space(th, " ");//vis_space(th);
     }
 };
 
@@ -346,7 +371,7 @@ protected:
                         next    = " ";
                     }
                 }
-                v += actual  + next + vis( (*it_th)->get_deep() - 1, next );
+                v += actual  + vis_space( *it_th, next );
             }
         }
         return v;
@@ -424,40 +449,40 @@ public:
 
 class thread_inic_team_log
 {
-    std::shared_ptr< std::vector< std::shared_ptr< int > > >  deeps;
+    std::shared_ptr< std::vector< std::shared_ptr< thread_dimension > > > dimensions;
 
 public:
     thread_inic_team_log(int cant) :
-        deeps { std::make_shared<std::vector< std::shared_ptr< int > > >(cant) }
+        dimensions { std::make_shared<std::vector< std::shared_ptr< thread_dimension > > >(cant) }
         { }
 
     thread_inic_team_log() :
-        deeps { std::make_shared<std::vector< std::shared_ptr< int > > >() }
+        dimensions { std::make_shared<std::vector< std::shared_ptr< thread_dimension > > >() }
         { }
 
-    void add_data(int pos, std::shared_ptr< int > max_deep)
+    void add_data(int pos, std::shared_ptr< thread_dimension > dimension)
     {
         if( !initialized() )
-            deeps->resize(omp_get_num_threads());
-        (*deeps)[pos] = max_deep;
+            dimensions->resize(omp_get_num_threads());
+        (*dimensions)[pos] = dimension;
     }
 
-    std::shared_ptr< std::vector< std::shared_ptr< int > > > get_deeps()
+    std::shared_ptr< std::vector< std::shared_ptr< thread_dimension > > >  get_dimensions()
     {
-        return deeps;
+        return dimensions;
     }
 
     bool initialized() const
     {
-        return deeps->size() > 0;
+        return dimensions->size() > 0;
     }
 
     bool complete() const
     {
         bool is_complete = true;
-        for(auto deep : *deeps)
+        for(auto dimension : *dimensions)
         {
-            if(!deep)
+            if(!dimension)
             {
                 is_complete = false;
                 break;
@@ -547,115 +572,126 @@ void show(const std::vector<event> &events)
 {
 
     std::shared_ptr<thread_team> g_team;
+    std::string msg;
     for( auto event : events )
     {
-        switch (event.type)
+        if(event.type == event_t::begin)
+            g_team = std::make_shared<thread_team>(event.data_team->get_dimensions());
+
+        auto &id = *event.id;
+        if(auto th = g_team->find(id))
         {
-            case event_t::begin :
-                {
-                    //std::cout << "begin " << vis_id(*event.id) << " " << event.data_team.use_count() << "\n";
-                    g_team = std::make_shared<thread_team>(event.data_team->get_deeps());
-                    if(auto th = g_team->find(*event.id))
+            switch (event.type)
+            {
+                case event_t::begin :
                     {
                         thread_team_visual_fork vfk(*g_team,
-                                                    *event.id);
-                        std::cout << vfk << /**th << */" @begin" << "\n";
+                                                    id);
+                        std::cout << vfk;
+                        msg = "* Begin";
                     }
-                }
-
-                break;
-            case event_t::end :
-                {
-                    //std::cout << "end " << vis_id(*event.id) << "\n";
-                    if(auto th = g_team->find(*event.id))
+                    break;
+                case event_t::end :
                     {
                         thread_team_visual_join vjn(*g_team,
-                                                    *event.id);
-                        std::cout << vjn << /**th << */" @end" << "\n";
+                                                    id);
+                        std::cout << vjn;
+                        msg = "° End";
+
                         g_team = nullptr;
                     }
-                }
-                break;
-            case event_t::fork :
-                {
-                    //std::cout << "fork " << vis_id(*event.id) << "\n";
-                    if(auto th = g_team->find(*event.id))
+                    break;
+                case event_t::fork :
                     {
-                        auto deeps = event.data_team->get_deeps();
-                        th->fork( deeps );
+                        auto dimensions = event.data_team->get_dimensions();
+                        th->fork( dimensions );
+
                         thread_team_visual_fork vfk(*g_team,
-                                                    *event.id);
-                        std::cout << vfk << /**th << vis_deeps(deeps) << */" @fork" << "\n";
+                                                    id);
+                        std::cout << vfk;
+                        #ifdef omp_log_test
+                        vis_dimensions(dimensions, std::cout);
+                        #endif
+                        msg = "* Fork";
                     }
-                }
-                break;
-            case event_t::join :
-                {
-                    //std::cout << "join " << vis_id(*event.id) << "\n";
-                    if(auto th = g_team->find(*event.id))
+                    break;
+                case event_t::join :
                     {
                         thread_team_visual_join vjn(*g_team,
-                                                    *event.id);
-                        std::cout << vjn << /**th << */" @join" << "\n";
+                                                    id);
+                        std::cout << vjn;
+                        msg = "° Join";
+
                         th->join();
                     }
-                }
-                break;
-            case event_t::message :
-                {
-                    //std::cout << "message find th" << vis_id(*event.id) ;
-                    if(auto th = g_team->find(*event.id))
+                    break;
+                case event_t::message :
                     {
-                        //std::cout << "found ";
-
+                        thread_team_visual_id vid(*g_team, *event.id);
+                        std::cout << vid;
+                        msg = *event.msg;
                     }
-                    else
-                    {
-                        //std::cout << "dont found";
-
-                    }
-                    //std::cout << " " << *event.msg << "\n";
-                    thread_team_visual_id vid(*g_team, *event.id);
-                    std::cout << vid << " " << *event.msg  << "\n";
-                }
-                break;
-            default:
-                std::cout << "Error!";
-                break;
+                    break;
+                default:
+                    std::cout << "Error!";
+                    break;
+            }
+            #ifdef omp_log_test
+            std::cout << *th;
+            #endif
+            std::cout << std::left << std::setw(th->get_dimension().deep * 2 + 4) << vis_id(id) << ": " << msg << "\n";
         }
+        else
+            std::cout << "thread don't found!";
 
-        //root_team.find();
     }
 }
 
 class thread_log;
 
-struct thread_deep_log //puede ser un width
+
+class thread_log_dimension
 {
-    std::shared_ptr< int >  max;
-    std::map<int, int>      max_deep_childs;
+    std::shared_ptr<thread_dimension> dimension;
+    std::map<int, std::shared_ptr<thread_dimension> >   dimension_childs;
 
 public:
-    thread_deep_log() :
-        max     { std::make_shared<int>(1) }
+    thread_log_dimension() :
+        dimension { std::make_shared<thread_dimension>() }
     { }
 
-    void add_max_deep_child(int pos, int max)
+    std::shared_ptr<thread_dimension> &get_dimension()
     {
-        max_deep_childs[pos] = max;
+        return dimension;
     }
 
-    void calculate_max_deep()
+    void registrate_child_dimension(int pos, std::shared_ptr<thread_dimension> dimension)
     {
-        *max = 0;
-        for( auto deep_ch : max_deep_childs )
+        dimension_childs[pos] = dimension;
+    }
+
+    void calculate()
+    {
+        dimension->deep  = 1;
+        //pensar nowait
+        if( dimension_childs.size() > 0 )
         {
-            *max += deep_ch.second;
+            dimension->width = 0;
+            int max_deep = 0;
+            for( auto dim_ch : dimension_childs )
+            {
+                dimension->width += dim_ch.second->width;
+                if( max_deep < dim_ch.second->deep )
+                    max_deep = dim_ch.second->deep;
+            }
+            dimension->deep += max_deep;
         }
-        max_deep_childs.clear();
+        else
+        {
+            dimension->width = 1;
+        }
+        dimension_childs.clear();
     }
-
-    
 };
 
 
@@ -668,11 +704,11 @@ class thread_log{
     std::optional<thread_logger>            u_logger;
     thread_logger&                          logger;
     stream_logger &                         s_log;
-    thread_deep_log                         deep;
+    thread_log_dimension                    log_dimension;
     std::shared_ptr<thread_inic_team_log>   data_team;
 
-    thread_log*                 parent;
-    std::vector< thread_log* >  childs;
+    thread_log*                             parent;
+    std::vector< thread_log* >              childs;
 
     static std::optional<thread_logger> get_unique_log(thread_log *parent)
     {
@@ -719,6 +755,8 @@ public:
     {
         #pragma omp critical
         {
+            log_dimension.calculate();
+
             if(!parent)
             {
                 logger.end(id);
@@ -744,14 +782,14 @@ public:
         return logger;
     }
 
-    thread_deep_log & get_deep()
+    std::shared_ptr<thread_dimension> & get_dimension()
     {
-        return deep;
+        return log_dimension.get_dimension();
     }
 
     void vincule_to_team(std::shared_ptr<thread_inic_team_log> d_team)
     {
-        d_team->add_data(id.front(), deep.max);
+        d_team->add_data(id.front(), get_dimension());
     }
 
     void message();
@@ -770,11 +808,7 @@ protected:
         
         ch->vincule_to_team(data_team);
         
-        //else
         childs.push_back(ch);
-
-        //deep.update(childs.size());
-        //deep.inc();//no va a funcionar para nowait
 
         
 
@@ -784,18 +818,16 @@ protected:
 
     void remove_child(thread_log *child)
     {
-        //future: vec.erase(std::remove(vec.begin(), vec.end(), 8), vec.end());
         auto it = std::find(childs.begin(), childs.end(), child);
         if (it != childs.end())
         {
-            deep.add_max_deep_child( (*it)->get_num(), *((*it)->get_deep().max) );
+            log_dimension.registrate_child_dimension( (*it)->get_num(), (*it)->get_dimension() );
             childs.erase(it);
-            //deep.update(childs.size());
+
             if(childs.empty())
             {
                if(data_team->complete())
                {
-                    deep.calculate_max_deep();
                     logger.end_team(id);
                }
             }

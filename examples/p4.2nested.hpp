@@ -31,7 +31,6 @@ void pnested()
             #pragma omp parallel num_threads(3)
             {
                 omp_log_inic_parented(log);
-                log << "Level 3: begin" << omp_log::endl();
 
                 unsigned long long v;
                 log << "Level 3: calc  factorial(";
@@ -44,7 +43,6 @@ void pnested()
 
                 log << "Level 3: result = " << f << omp_log::endl();
 
-                log << "Level 3: end" << omp_log::endl();
             }
 
             log << "Level 2: end" << omp_log::endl();
