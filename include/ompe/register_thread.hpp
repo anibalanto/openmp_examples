@@ -37,7 +37,6 @@ public:
         std::string svid = "";
         for (int i = 0; i < vtid._max_n_ths + 1; i++)
         {
-            //if i is equal to thread number writes "*" else will write "|"
             svid += (i <  vtid._th_n)?  " │"                     : 
                     (i == vtid._th_n)?  " " + std::to_string(i)  :
                     (i <  vtid._n_ths)? " │"                     :
@@ -215,3 +214,5 @@ private:
     }
 
 };
+
+
