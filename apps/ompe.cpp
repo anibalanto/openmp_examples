@@ -51,6 +51,7 @@ int main(int argc, char* argv[])
             loader(psin_integration),
             loader(pproducer_consumer)*/
             loader(pnested_compare),
+            loader(pfactorial_nested),
             loader(p4for_single_master) } };
 
     int fn = -1;
