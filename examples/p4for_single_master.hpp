@@ -17,7 +17,7 @@ void p4for_single_master()
             omp_log_inic_parented(log);
 
             for(int i=0; i < rep; i++)
-                log << "parallel " << i << omp_log::endl();
+                log << "parallel " << i << std::endl;
 
             
             #pragma omp parallel num_threads(2)
@@ -26,31 +26,31 @@ void p4for_single_master()
                 #pragma omp single
                 {
                     for(int i=0; i < rep; i++)
-                        log << "NESTED SINGLE " << i << omp_log::endl();
+                        log << "NESTED SINGLE " << i << std::endl;
                 }
             }
 
             #pragma omp master
             {
                 for(int i=0; i < rep; i++)
-                    log << "MASTER " << i << omp_log::endl();
+                    log << "MASTER " << i << std::endl;
             }
 
             #pragma omp single
             {
                 for(int i=0; i < rep; i++)
-                    log << "SINGLE " << i << omp_log::endl();
+                    log << "SINGLE " << i << std::endl;
             }
 
             #pragma omp barrier
             
             #pragma omp single
             {
-                log << "--barrier-----" << omp_log::endl();
+                log << "--barrier-----" << std::endl;
             }
             
             for(int i=0; i < rep; i++)
-                log << "parallel 4." << i << omp_log::endl();
+                log << "parallel 4." << i << std::endl;
 
         }
     }

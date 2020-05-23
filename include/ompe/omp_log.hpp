@@ -5,18 +5,23 @@
 #include <deque>
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <optional>
 #include <algorithm>
 #include <chrono>
+#include <ctime>
 #include <thread>
+#include <mutex>
 #include <ctime>
 #include <omp.h>
 
 namespace omp_log {
 
+static int precision_default = 6;
+    
 class thread;
 
 using thread_id = std::deque<int>;
@@ -209,7 +214,7 @@ std::string vis_id( thread_id id)
 
     }
 
-    s_id << "(" << sparent_id.str() << "{" << num << "}" << ")";
+    s_id << /*"(" <<*/ sparent_id.str() /*<< "{" */<< num /*<< "}" << ")"*/;
 
     return s_id.str();
 }
@@ -315,6 +320,23 @@ protected:
     }
 };
 
+class thread_team_visual_chrono : public thread_team_visual
+{
+    char ch;
+public:
+    thread_team_visual_chrono(thread_team &team, thread_id &id, char ch) :
+        thread_team_visual(team, id),
+        ch { ch }
+    { }
+
+protected:
+
+    std::string vis_actual( std::shared_ptr<thread> &   th ) override
+    {
+        return ch + vis_space(th, " ");//vis_space(th);
+    }
+};
+
 struct printeable_team
 {
     std::string point;
@@ -412,41 +434,6 @@ protected:
 };
 
 
-class duration
-{
-    std::chrono::duration<double> _duration;
-    int _precision;
-public:
-    duration(std::chrono::duration<double> duration = std::chrono::duration<double>::zero(), int precision = 9) :
-        _duration{duration},
-        _precision{precision}
-    { }
-
-    friend inline ::std::ostream& operator<< (::std::ostream & os, const duration &d)
-    {
-        os << std::fixed
-           << std::setprecision(d._precision ) << std::setfill( ' ' )
-           << d._duration.count();
-        return os;
-    }
-
-    friend inline bool operator< (const duration &da, const duration &db)
-    {
-        return da._duration < db._duration;
-    }
-
-    friend inline bool operator> (const duration &da, const duration &db)
-    {
-        return da._duration > db._duration;
-    }
-
-    friend inline duration operator- (const duration &da, const duration &db)
-    {
-        return duration(da._duration - db._duration);
-    }
-};
-
-
 class thread_inic_team_log
 {
     std::shared_ptr< std::vector< std::shared_ptr< thread_dimension > > > dimensions;
@@ -493,7 +480,75 @@ public:
 };
 
 
-enum class event_t {begin, message, fork, join, end};
+struct chrono_log
+{
+    char id;
+    std::chrono::system_clock::time_point time;
+};
+
+class duration
+{
+    std::chrono::duration<double>   _duration;
+    int                             _precision;
+public:
+    duration(   std::chrono::duration<double>   duration    =
+                    std::chrono::duration<double>::zero(),
+                int                             precision   =   9) :
+        _duration{duration},
+        _precision{precision}
+    { }
+
+    friend inline ::std::ostream& operator<< (::std::ostream & os, const duration &d)
+    {
+        os << std::fixed
+           << std::setprecision(d._precision ) << std::setfill( ' ' )
+           << d._duration.count()
+           << std::scientific
+           << std::setprecision( precision_default ); 
+        return os;
+    }
+
+    friend inline bool operator< (const duration &da, const duration &db)
+    {
+        return da._duration < db._duration;
+    }
+
+    friend inline bool operator> (const duration &da, const duration &db)
+    {
+        return da._duration > db._duration;
+    }
+
+    friend inline duration operator- (const duration &da, const duration &db)
+    {
+        return duration(da._duration - db._duration);
+    }
+};
+
+
+class chronometer
+{
+    std::unordered_map<char, chrono_log> chronos;
+public:
+    void regist(const chrono_log & ch)
+    {
+        chronos[ch.id] = ch;
+    }
+    
+    duration chronometrate(const chrono_log & ch)
+    {
+        auto it_ch_inic = chronos.find(ch.id);
+        if(it_ch_inic != chronos.end())
+        {
+            duration d(ch.time - it_ch_inic->second.time);
+            chronos.erase(it_ch_inic);
+            return d;
+        }
+        return { };
+    }
+};
+
+
+enum class event_t {begin, message, fork, join, chrono_begin, chrono_end, end};
 struct event
 {
     //duration                    time;
@@ -501,12 +556,12 @@ struct event
     std::optional< thread_id >              id;
     std::optional< std::string >            msg;
     std::shared_ptr<thread_inic_team_log>   data_team;
+    std::optional< chrono_log >             chrono;
 };
 
-class thread_logger //! instancia unica de logger (singleton)
+class thread_logger
 {
-    std::vector<event>    events;
-
+    std::vector<event>  events;
 
 public:
     const std::vector<event> & get_events()
@@ -516,42 +571,46 @@ public:
 
     void begin( const thread_id &id, std::shared_ptr<thread_inic_team_log> data_team )
     {
-        //std::cout << "begin " << vis_id(id) << " " << data_team.use_count() << "\n";
-        logging({   //chrono(),
-                    event_t::begin,
+        logging({   event_t::begin,
                     {id}, {}, data_team });
     }
 
     void begin_team(const thread_id &id, std::shared_ptr<thread_inic_team_log> data_team)
     {
-        //std::cout << "beginteam " << vis_id(id) << " " << data_team.use_count() << "\n";
-        logging({   //chrono(),
-                    event_t::fork,
+        logging({   event_t::fork,
                     {id}, {}, data_team });
     }
 
     void end_team(const thread_id &id/*, std::shared_ptr<thread_inic_team_log> &data_fork*/)
     {
-        //std::cout << "endteam " << vis_id(id) << "\n";
-        logging({   //chrono(),
-                    event_t::join,
+        logging({   event_t::join,
                     {id}, {}, {}/*data_fork*/ });
     }
 
     void end(const thread_id &id)
     {
-        //std::cout << "end " << vis_id(id) << "\n";
-        logging({   //chrono(),
-                    event_t::end,
+        logging({   event_t::end,
                     {id}, {}, {} });
     }
 
     void message(const thread_id &id, const std::string &msg)
     {
-        //std::cout << "msg " << vis_id(id) << " " <<msg << "\n";
-        logging({   //chrono(),
-                    event_t::message,
-                    {id}, {msg}, nullptr });
+        logging({   event_t::message,
+                    {id}, {msg}, {} });
+    }
+    
+    void begin_chrono(const thread_id &id, const char & ch)
+    {
+        auto chr = std::optional<chrono_log>( { ch, std::chrono::system_clock::now() } );
+        logging({   event_t::chrono_begin,
+                    {id}, {}, {}, chr } );
+    }
+    
+        void end_chrono(const thread_id &id, const char & ch)
+    {
+        auto chr = std::optional<chrono_log>( { ch, std::chrono::system_clock::now() } );
+        logging({   event_t::chrono_end,
+                    {id}, {}, {}, chr } );
     }
 
 private:
@@ -560,19 +619,14 @@ private:
     {
         events.push_back(data);
     }
-
-    /*duration chrono()
-    {
-        return std::chrono::system_clock::now() - start;
-    }*/
 };
 
 
 void show(const std::vector<event> &events)
 {
-
-    std::shared_ptr<thread_team> g_team;
-    std::string msg;
+    chronometer                     chrono;
+    std::shared_ptr<thread_team>    g_team;
+    std::ostringstream              msg;
     for( auto event : events )
     {
         if(event.type == event_t::begin)
@@ -588,7 +642,7 @@ void show(const std::vector<event> &events)
                         thread_team_visual_fork vfk(*g_team,
                                                     id);
                         std::cout << vfk;
-                        msg = "* Begin";
+                        msg << "[*] Begin";
                     }
                     break;
                 case event_t::end :
@@ -596,7 +650,7 @@ void show(const std::vector<event> &events)
                         thread_team_visual_join vjn(*g_team,
                                                     id);
                         std::cout << vjn;
-                        msg = "° End";
+                        msg << "[°] End";
 
                         g_team = nullptr;
                     }
@@ -612,7 +666,7 @@ void show(const std::vector<event> &events)
                         #ifdef omp_log_test
                         vis_dimensions(dimensions, std::cout);
                         #endif
-                        msg = "* Fork";
+                        msg << "[*] Fork";
                     }
                     break;
                 case event_t::join :
@@ -620,18 +674,36 @@ void show(const std::vector<event> &events)
                         thread_team_visual_join vjn(*g_team,
                                                     id);
                         std::cout << vjn;
-                        msg = "° Join";
+                        msg << "[°] Join";
 
                         th->join();
                     }
                     break;
                 case event_t::message :
                     {
-                        thread_team_visual_id vid(*g_team, *event.id);
+                        thread_team_visual_id vid(*g_team, id);
                         std::cout << vid;
-                        msg = *event.msg;
+                        msg << "[" << id.front() << "] " << *event.msg;
                     }
                     break;
+                case event_t::chrono_begin:
+                    {
+                        auto chr = *event.chrono;
+                        thread_team_visual_chrono vic(*g_team, id, chr.id);
+                        std::cout << vic;
+                        chrono.regist(chr);
+                        msg << "[" << chr.id << "] Begin Chrono";
+                    }
+                    break;
+                case event_t::chrono_end:
+                    {
+                        auto chr = *event.chrono;
+                        thread_team_visual_chrono vic(*g_team, id, chr.id);
+                        std::cout << vic;
+                        msg << "[" << chr.id << "] End Chrono t: " << chrono.chronometrate(chr);
+                    }
+                    break;
+
                 default:
                     std::cout << "Error!";
                     break;
@@ -641,7 +713,9 @@ void show(const std::vector<event> &events)
             #endif
             int id_width = th->get_dimension().deep * 2 + 10;
             std::cout << std::left << std::setw(15) << vis_id(id);
-            std::cout << ": " << msg << "\n";
+            std::cout << ": " << msg.str() << "\n";
+            msg.str("");
+            msg.clear();
         }
         else
             std::cout << "thread don't found!";
@@ -700,6 +774,7 @@ public:
 class stream_logger;
 
 class thread_log{
+    
     thread_id id;
     int num;
     
@@ -735,7 +810,7 @@ public:
         data_team   { std::make_shared<thread_inic_team_log>() },
         parent      { parent }
     {
-         #pragma omp critical
+        #pragma omp critical
         {
             if( !parent )
             {
@@ -794,6 +869,16 @@ public:
         d_team->add_data(id.front(), get_dimension());
     }
 
+    void begin_chrono(const char & ch)
+    {
+        logger.begin_chrono(id, ch);
+    }
+    
+    void end_chrono(const char & ch)
+    {
+        logger.end_chrono(id, ch);
+    }
+    
     void message();
 
 protected:
@@ -838,14 +923,11 @@ protected:
 };
 
 
-enum class log_msg { end };
-
-log_msg endl() { return log_msg::end; }
-
 class stream_logger
 {
     thread_log          th_log;
     std::ostringstream  sstream;
+    
 
 public:
     stream_logger() :
@@ -855,6 +937,11 @@ public:
     stream_logger( stream_logger & parent ) :
         th_log{ *this, &(parent.get_th_log()) }
     { }
+    
+    ~stream_logger()
+    {
+        flush();
+    }
 
     thread_log &get_th_log()
     {
@@ -866,20 +953,47 @@ public:
         auto str = sstream.str();
         sstream.str("");
         sstream.clear();
+        
+        sstream << std::scientific << std::setprecision(precision_default);
         return str;
     }
+    
+    void begin_chrono(char c)
+    {
+        flush();
+        th_log.begin_chrono(c);
+    }
 
+    void end_chrono(char c)
+    {
+        flush();
+        th_log.end_chrono(c);
+    }
+    
+protected:
+    void flush()
+    {
+        if ( ! empty() )
+            th_log.message();
+    }
+    bool empty()
+    {
+        std::streampos pos = sstream.tellp();   // store current location
+        sstream.seekp(0, std::ios_base::end);        // go to end
+        bool am_empty = (sstream.tellp() == 0);    // check size == 0 ?
+        sstream.seekp(pos); 
+        return am_empty;
+    }
     template <typename T>
     friend stream_logger& operator<<(stream_logger& sm, const T& t)
     {
         sm.sstream << t;
         return sm;
     }
-
-    friend stream_logger& operator<<(stream_logger& sm, const log_msg& op)
+    
+    friend stream_logger& operator<<(stream_logger& sm, std::ostream& (*fun)(std::ostream&) )
     {
-        if( op == log_msg::end )
-            sm.th_log.message();
+        sm.th_log.message();
         return sm;
     }
 };
