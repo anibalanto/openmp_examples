@@ -26,7 +26,6 @@ class thread;
 
 using thread_id = std::deque<int>;
 
-
 struct thread_dimension
 {
     int width;
@@ -218,6 +217,30 @@ std::string vis_id( thread_id id)
 
     return s_id.str();
 }
+
+
+class thread_id_visual
+{
+    thread_id   id;
+    int         deep;
+public:
+    thread_id_visual(thread_id &id, int deep) :
+        id      {id},
+        deep    {deep}
+    { }
+
+protected:
+    std::ostream& vis(std::ostream& os)
+    {
+        os /*<< std::left*/ << std::setw(deep * 2 - 1) << vis_id(id);
+        return os;
+    }
+
+    friend inline std::ostream& operator<<(std::ostream& os, thread_id_visual &tid)
+    {
+        return tid.vis(os);
+    }
+};
 
 void vis_dimensions(std::shared_ptr<std::vector<std::shared_ptr<thread_dimension> > > dimensions,
                            std::ostream & os)
@@ -622,88 +645,103 @@ private:
 };
 
 
-void show(const std::vector<event> &events)
+void show(std::ostream & os, const std::vector<event> &events)
 {
-    chronometer                     chrono;
-    std::shared_ptr<thread_team>    g_team;
-    std::ostringstream              msg;
+    chronometer                         chrono;
+    std::unique_ptr<thread_team>        g_team;
+    int                                 g_deep;
+    std::ostringstream                  smark;
+    std::ostringstream                  smsg;
+    int                                 width_id;
+    
     for( auto event : events )
     {
         if(event.type == event_t::begin)
-            g_team = std::make_shared<thread_team>(event.data_team->get_dimensions());
-
+        {
+            auto dimensions = event.data_team->get_dimensions();
+            g_team      = std::make_unique<thread_team>(dimensions);
+            g_deep = (*dimensions)[0]->deep;
+        }
         auto &id = *event.id;
         if(auto th = g_team->find(id))
         {
+            thread_id_visual vid(id, g_deep);
             switch (event.type)
             {
                 case event_t::begin :
-                    {
-                        thread_team_visual_fork vfk(*g_team,
-                                                    id);
-                        std::cout << vfk;
-                        msg << "[*] Begin";
-                    }
+                {
+                    thread_team_visual_fork thv( *g_team, id );
+                    os      << thv;
+                    smark   << "*";
+                    smsg    << "begin";
+                }
                     break;
                 case event_t::end :
-                    {
-                        thread_team_visual_join vjn(*g_team,
-                                                    id);
-                        std::cout << vjn;
-                        msg << "[°] End";
+                {
+                    thread_team_visual_join thv( *g_team, id );
+                    os      << thv;
+                    smark   << "°";
+                    smsg    << "end";
 
-                        g_team = nullptr;
-                    }
+                    g_team = nullptr;
+                }
                     break;
                 case event_t::fork :
-                    {
-                        auto dimensions = event.data_team->get_dimensions();
-                        th->fork( dimensions );
+                {
+                    th->fork( event.data_team->get_dimensions() );
 
-                        thread_team_visual_fork vfk(*g_team,
-                                                    id);
-                        std::cout << vfk;
-                        #ifdef omp_log_test
-                        vis_dimensions(dimensions, std::cout);
-                        #endif
-                        msg << "[*] Fork";
-                    }
+                    thread_team_visual_fork thv( *g_team, id );
+                    
+                    os      << thv;
+                    smark   << "*";
+                    smsg    << "fork";
+                    #ifdef omp_log_test
+                    vis_dimensions(dimensions, std::cout);
+                    #endif
+                }
                     break;
                 case event_t::join :
-                    {
-                        thread_team_visual_join vjn(*g_team,
-                                                    id);
-                        std::cout << vjn;
-                        msg << "[°] Join";
+                {
+                    thread_team_visual_join thv( *g_team, id );
+                        
+                    os      << thv;
+                    smark   << "°";
+                    smsg    << "join";
 
-                        th->join();
-                    }
+                    th->join();
+                }
                     break;
                 case event_t::message :
-                    {
-                        thread_team_visual_id vid(*g_team, id);
-                        std::cout << vid;
-                        msg << "[" << id.front() << "] " << *event.msg;
-                    }
+                {
+                    thread_team_visual_id thv( *g_team, id );
+                        
+                    os      << thv;
+                    smark   << id.front();
+                    smsg    << "msg: " << *event.msg;
+                }
                     break;
                 case event_t::chrono_begin:
-                    {
-                        auto chr = *event.chrono;
-                        thread_team_visual_chrono vic(*g_team, id, chr.id);
-                        std::cout << vic;
-                        chrono.regist(chr);
-                        msg << "[" << chr.id << "] Begin Chrono";
-                    }
+                {
+                    auto chr = *event.chrono;
+                    thread_team_visual_chrono thv( *g_team, id, chr.id );
+                        
+                    os      << thv;
+                    smark   << chr.id;
+                    smsg    << "chrono_begin";
+                    
+                    chrono.regist(chr);
+                }
                     break;
                 case event_t::chrono_end:
-                    {
-                        auto chr = *event.chrono;
-                        thread_team_visual_chrono vic(*g_team, id, chr.id);
-                        std::cout << vic;
-                        msg << "[" << chr.id << "] End Chrono t: " << chrono.chronometrate(chr);
-                    }
+                {
+                    auto chr = *event.chrono;
+                    thread_team_visual_chrono thv( *g_team, id, chr.id );
+                        
+                    os      << thv;
+                    smark   << chr.id;
+                    smsg    << "chrono_end: " << chrono.chronometrate(chr) << "s";
+                }
                     break;
-
                 default:
                     std::cout << "Error!";
                     break;
@@ -711,11 +749,14 @@ void show(const std::vector<event> &events)
             #ifdef omp_log_test
             std::cout << *th;
             #endif
-            int id_width = th->get_dimension().deep * 2 + 10;
-            std::cout << std::left << std::setw(15) << vis_id(id);
-            std::cout << ": " << msg.str() << "\n";
-            msg.str("");
-            msg.clear();
+            os << smark.str() << "> " << vid << " ~" << smsg.str() << "\n";
+
+            //clear smark
+            smark.str("");
+            smark.clear();
+            //clear smsg
+            smsg.str("");
+            smsg.clear();
         }
         else
             std::cout << "thread don't found!";
@@ -837,7 +878,7 @@ public:
             if(!parent)
             {
                 logger.end(id);
-                show(logger.get_events());
+                show(std::cout, logger.get_events());
             }
             else
                 parent->remove_child( this );

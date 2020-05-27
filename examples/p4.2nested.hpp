@@ -31,14 +31,12 @@ void pnested()
                 #pragma omp critical
                 {
                     m = n++;
-                    log << "Lvl3: (m: " << m << ") begin";
                 }
-                log << std::endl;
+                log << "Lvl3: (m: " << m << ") begin" << std::endl;
 
                 auto res = factorial(m);
 
                 log << "Lvl3: (m: " << m << ") -> fact(m) = " << res << std::endl;
-
 
             }
 

@@ -50,9 +50,11 @@ int main(int argc, char* argv[])
             loader(ptask),
             loader(psin_integration),
             loader(pproducer_consumer)*/
-            loader(pnested_compare),
-            loader(pfactorial_nested),
-            loader(p4for_single_master) } };
+            loader(p4for_single_master),
+            loader(pnested_compare)//,
+            //loader(pbig_factorial_nested),
+            //loader(pfactorial_nested)
+             } };
 
     int fn = -1;
     bool list = false,
