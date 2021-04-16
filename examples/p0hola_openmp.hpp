@@ -1,6 +1,8 @@
 #pragma once
-#include "register_thread.hpp"
-#include "function_loaded.hpp"
+
+#include <iostream>
+#include <omp.h>
+#include "../include/ompe/omp_log.hpp"
 
 using namespace std;
 
@@ -8,8 +10,7 @@ void phola_openmp()
 {
     cout << "Permiso" << "\n";
 
-    omp_set_num_threads(4);
-    #pragma omp parallel
+    #pragma omp parallel num_threads(4)
     {
         int nts = omp_get_num_threads();
         int nt  = omp_get_thread_num();
@@ -26,8 +27,7 @@ void pcritical_hola_openmp()
 {
     cout << "Permiso" << "\n";
 
-    omp_set_num_threads(4);
-    #pragma omp parallel
+    #pragma omp parallel num_threads(4)
     {
         int nts = omp_get_num_threads();
         int nt  = omp_get_thread_num();
@@ -46,22 +46,23 @@ void pcritical_hola_openmp()
 void phello_omp()
 {
 
-    static int const th_cant = 4;
- 
-    RegisterThread regist("hello", th_cant);
-    
-    regist.registrate("Entramos"); 
+    omp_log_inic();
 
-    omp_set_num_threads(th_cant);
-    #pragma omp parallel
+    omp_log << "Permiso" << std::endl;
+
+    #pragma omp parallel num_threads(4)
     {
-        regist.registrate("Hola OpenMP!");
+        omp_log_inic_parented();
+
+        int nts = omp_get_num_threads();
+        int nt  = omp_get_thread_num();
+        omp_log << "Hola OpenMP! "
+                << "Yo soy "    << nt
+                << ". Vinimos " << nts
+                << std::endl;
     }
 
-    regist.registrate("Salimos"); 
+    cout << "Nos vamos!" << "\n";
 }
 
-FunctionLoaded load_phello_omp()
-{
-    return {"phello_omp", phello_omp};
-}
+

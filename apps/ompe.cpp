@@ -11,18 +11,19 @@
 
 #include "../include/ompe/function_loaded.hpp"
 
-/*#include "p0hola_openmp.hpp"
-#include "p1for.hpp"
-#include "p2for.hpp"
-#include "p3numerical_integration.hpp"
-#include "p4.1nested.hpp"
-#include "p5for_nowait.hpp"
-#include "p6sections.hpp"
-#include "p7task.hpp"
-#include "p8sin_integration.hpp"
-#include "pproducer_consumer.hpp"*/
-#include "../examples/p4for_single_master.hpp"
+#include "../examples/p0hola_openmp.hpp"
+#include "../examples/p1for.hpp"
+/*#include "../examples/p2for.hpp"
+#include "../examples/p3numerical_integration.hpp"*/
+#include "../examples/p4.1nested.hpp"
+/*#include "../examples/p5for_nowait.hpp"
+#include "../examples/p6sections.hpp"
+#include "../examples/p7task.hpp"
+#include "../examples/p8sin_integration.hpp"
+#include "../examples/pproducer_consumer.hpp"*/
+//#include "../examples/p4for_single_master.hpp"
 #include "../examples/p4.2nested.hpp"
+//#include "../examples/pwrapper.hpp"
 
 #include "../include/ompe/clipp.h"
 #include "../include/ompe/table.hpp"
@@ -32,27 +33,30 @@ using namespace clipp;
 
 static string soft_name = "ompe";
 
-#define omp_log_test
+std::unordered_map< uintptr_t, std::shared_ptr<omp_log::stream_logger> > omp_log::stream_logger_register::sloggers;
 
 int main(int argc, char* argv[])
 {
     vector<FunctionLoaded> functions
-        { { /*loader(phola_openmp),
+        { {
+            loader(pfor1),
+            loader(pfor1bis),
+            loader(phola_openmp),
             loader(pcritical_hola_openmp),
             loader(phello_omp),
-            loader(pfor1),
-            loader(pfor2),
+            /*loader(pfor2),
             loader(pnumerical_integration),
-            loader(pfor3_single_master),
-            loader(pnested),
-            loader(pfor4_nowait),
+            loader(pfor3_single_master),*/
+            loader(phello_nested),
+            /*loader(pfor4_nowait),
             loader(psections),
             loader(ptask),
             loader(psin_integration),
             loader(pproducer_consumer)*/
-            loader(p4for_single_master),
-            loader(pnested_compare)//,
-            //loader(pbig_factorial_nested),
+            //loader(p4for_single_master),
+            loader(pnested_compare),
+            //loader(pwrapper)
+            loader(pbig_factorial_nested)
             //loader(pfactorial_nested)
              } };
 
@@ -123,3 +127,4 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
