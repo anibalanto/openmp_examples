@@ -31,7 +31,7 @@ cmake --build .
 ```
 
 ## Uso
-Dentro de la carpeta `/build` se encontrá el archivo del comando ejecutable con el nombre `ompe`.
+Dentro de la carpeta `/build/apps` se encontrá el archivo del comando ejecutable con el nombre `ompe`.
 Para ver la ayuda del comando utilizamos la opción `-h` o `--help`:
 ```
 ./ompe -h
@@ -47,8 +47,97 @@ Estos son comandos de ompe (OpenMP Example)
        -h, --help
                Ayuda
 ```
-Con la opción `-l` o `--list` se listarán todas las funciones con ejemplos y su valor `fnum` con el cual se puede ejecutar. Por ejemplo, para ejecutar la función número 3 simplemente escribimos:
+Con la opción `-l` o `--list` se listarán todas las funciones con ejemplos y su valor `fnum` con el cual se puede ejecutar.
+```
+./ompe -l
+```
+Tendrá como salida:
+```
+Número función con su respectivo nombre
+fnum  Nombre              
+0     pfor1               
+1     pfor1bis            
+2     phola_openmp        
+3     pcritical_hola_openmp
+4     phello_omp          
+5     phello_nested       
+6     p4for_single_master 
+7     pnested_compare     
+8     pbig_factorial_nested
 
 ```
-./ompe 3
+Por ejemplo, para ejecutar la función número 3 simplemente escribimos:
+
+```
+./ompe 6
+```
+Tendrá como salida:
+```
+*>     0 ~begin
+*───┬───┬───┬───┐   *>     0 ~fork
+0   │   │   │   │   0>   0.0 ~msg: simple for 0
+│   │   │   3   │   3>   0.3 ~msg: simple for 0
+│   │   │   3   │   3>   0.3 ~msg: simple for 1
+0   │   │   │   │   0>   0.0 ~msg: simple for 1
+│   │   │   3   │   3>   0.3 ~msg: simple for 2
+│   │   │   │   4   4>   0.4 ~msg: simple for 0
+│   │   2   │   │   2>   0.2 ~msg: simple for 0
+│   │   │   *─┐ │   *>   0.3 ~fork
+│   1   │   │ │ │   1>   0.1 ~msg: simple for 0
+0   │   │   │ │ │   0>   0.0 ~msg: simple for 2
+│   1   │   │ │ │   1>   0.1 ~msg: simple for 1
+│   │   │   0 │ │   0> 0.3.0 ~msg: NESTED SINGLE 0
+│   │   │   │ │ 4   4>   0.4 ~msg: simple for 1
+│   │   │   0 │ │   0> 0.3.0 ~msg: NESTED SINGLE 1
+│   1   │   │ │ │   1>   0.1 ~msg: simple for 2
+│   │   2   │ │ │   2>   0.2 ~msg: simple for 1
+│   │   │   0 │ │   0> 0.3.0 ~msg: NESTED SINGLE 2
+│   │   2   │ │ │   2>   0.2 ~msg: simple for 2
+*─┐ │   │   │ │ │   *>   0.0 ~fork
+│ │ *─┐ │   │ │ │   *>   0.1 ~fork
+│ │ │ │ *─┐ │ │ │   *>   0.2 ~fork
+│ │ │ │ 0 │ │ │ │   0> 0.2.0 ~msg: NESTED SINGLE 0
+│ │ │ │ 0 │ │ │ │   0> 0.2.0 ~msg: NESTED SINGLE 1
+│ │ │ │ 0 │ │ │ │   0> 0.2.0 ~msg: NESTED SINGLE 2
+│ │ │ 1 │ │ │ │ │   1> 0.1.1 ~msg: NESTED SINGLE 0
+│ │ │ 1 │ │ │ │ │   1> 0.1.1 ~msg: NESTED SINGLE 1
+│ │ │ │ │ │ °─┘ │   °>   0.3 ~join
+│ │ │ │ │ │ │   4   4>   0.4 ~msg: simple for 2
+│ │ │ │ °─┘ │   │   °>   0.2 ~join
+│ │ │ 1 │   │   │   1> 0.1.1 ~msg: NESTED SINGLE 2
+│ 1 │ │ │   │   │   1> 0.0.1 ~msg: NESTED SINGLE 0
+│ │ │ │ │   │   *─┐ *>   0.4 ~fork
+│ │ │ │ │   3   │ │ 3>   0.3 ~msg: SINGLE 0
+│ │ °─┘ │   │   │ │ °>   0.1 ~join
+│ 1 │   │   │   │ │ 1> 0.0.1 ~msg: NESTED SINGLE 1
+│ │ │   │   3   │ │ 3>   0.3 ~msg: SINGLE 1
+│ 1 │   │   │   │ │ 1> 0.0.1 ~msg: NESTED SINGLE 2
+│ │ │   │   │   │ 1 1> 0.4.1 ~msg: NESTED SINGLE 0
+│ │ │   │   3   │ │ 3>   0.3 ~msg: SINGLE 2
+│ │ │   │   │   │ 1 1> 0.4.1 ~msg: NESTED SINGLE 1
+°─┘ │   │   │   │ │ °>   0.0 ~join
+│   │   │   │   │ 1 1> 0.4.1 ~msg: NESTED SINGLE 2
+0   │   │   │   │ │ 0>   0.0 ~msg: MASTER 0
+0   │   │   │   │ │ 0>   0.0 ~msg: MASTER 1
+│   │   │   │   °─┘ °>   0.4 ~join
+0   │   │   │   │   0>   0.0 ~msg: MASTER 2
+0   │   │   │   │   0>   0.0 ~msg: --barrier-----
+0   │   │   │   │   0>   0.0 ~msg: parallel 4.0
+│   │   │   3   │   3>   0.3 ~msg: parallel 4.0
+│   │   2   │   │   2>   0.2 ~msg: parallel 4.0
+│   │   │   3   │   3>   0.3 ~msg: parallel 4.1
+│   │   2   │   │   2>   0.2 ~msg: parallel 4.1
+│   │   │   3   │   3>   0.3 ~msg: parallel 4.2
+│   │   2   │   │   2>   0.2 ~msg: parallel 4.2
+0   │   │   │   │   0>   0.0 ~msg: parallel 4.1
+0   │   │   │   │   0>   0.0 ~msg: parallel 4.2
+│   │   │   │   4   4>   0.4 ~msg: parallel 4.0
+│   │   │   │   4   4>   0.4 ~msg: parallel 4.1
+│   1   │   │   │   1>   0.1 ~msg: parallel 4.0
+│   │   │   │   4   4>   0.4 ~msg: parallel 4.2
+│   1   │   │   │   1>   0.1 ~msg: parallel 4.1
+│   1   │   │   │   1>   0.1 ~msg: parallel 4.2
+°───┴───┴───┴───┘   °>     0 ~join
+°>     0 ~end
+
 ```
