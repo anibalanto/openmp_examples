@@ -66,7 +66,7 @@ fnum  Nombre
 8     pbig_factorial_nested
 
 ```
-Por ejemplo, para ejecutar la función número 3 simplemente escribimos:
+Por ejemplo, para ejecutar la función número 6 simplemente escribimos:
 
 ```
 ./ompe 6
