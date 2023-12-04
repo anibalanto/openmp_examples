@@ -35,15 +35,17 @@ static string soft_name = "ompe";
 
 std::unordered_map< uintptr_t, std::shared_ptr<omp_log::stream_logger> > omp_log::stream_logger_register::sloggers;
 
+#define omp_log_test
+
 int main(int argc, char* argv[])
 {
     vector<FunctionLoaded> functions
         { {
-            loader(pfor1),
-            loader(pfor1bis),
+            //loader(pfor1),
             loader(phola_openmp),
             loader(pcritical_hola_openmp),
             loader(phello_omp),
+            loader(pfor1bis),
             /*loader(pfor2),
             loader(pnumerical_integration),
             loader(pfor3_single_master),*/

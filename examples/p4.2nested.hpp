@@ -14,14 +14,14 @@ void pnested()
 {
 
     omp_log_inic();
-    omp_log << "Lvl0: begin" << std::endl;
+    omp_logger << "Lvl0: begin" << std::endl;
 
     unsigned int n = 0;
-    omp_log << "Lvl0:(n: " << n << ")" << std::endl;
+    omp_logger << "Lvl0:(n: " << n << ")" << std::endl;
     #pragma omp parallel num_threads(3)
     {
         omp_log_inic_parented();
-        omp_log << "Lvl1: begin" << std::endl;
+        omp_logger << "Lvl1: begin" << std::endl;
 
             #pragma omp parallel num_threads(4)
             {
@@ -32,19 +32,21 @@ void pnested()
                 {
                     m = n++;
                 }
-                omp_log << "Lvl3: (m: " << m << ") begin" << std::endl;
+                omp_logger << "Lvl3: (m: " << m << ") begin" << std::endl;
 
                 auto res = factorial(m);
 
-                omp_log << "Lvl3: (m: " << m << ") -> fact(m) = " << res << std::endl;
+                omp_logger << "Lvl3: (m: " << m << ") -> fact(m) = " << res << std::endl;
 
             }
 
-        omp_log << "Lvl1: end" << std::endl;
+        omp_logger << "Lvl1: end" << std::endl;
     }
-    omp_log << "Lvl0:(n: " << n << ")" << std::endl;
+    omp_logger << "Lvl0:(n: " << n << ")" << std::endl;
 
-    omp_log << "Lvl0: end" << std::endl;
+    omp_logger << "Lvl0: end" << std::endl;
+
+    omp_log_finalize();
 
 }
 
@@ -91,7 +93,7 @@ void pbig_factorial_nested()
         {
             ri = i1++;
         }
-        //omp_log << "r" << ri <<"\t: begin" << std::endl;
+        //omp_logger << "r" << ri <<"\t: begin" << std::endl;
 
         std::map<int, long double> p;
 
@@ -108,11 +110,11 @@ void pbig_factorial_nested()
                 n++;
                 m1 = n++;
             }
-            //omp_log << "p" << pi << "\t: begin" << std::endl;
+            //omp_logger << "p" << pi << "\t: begin" << std::endl;
 
             auto res = m0 * m1;
 
-            omp_log << "p" << pi << "\t: {" << m0 << ", " << m1 << "} -> \tMult(p) = " << res << std::endl;
+            omp_logger << "p" << pi << "\t: {" << m0 << ", " << m1 << "} -> \tMult(p) = " << res << std::endl;
             #pragma omp critical
             {
                 p[pi] = res;
@@ -120,13 +122,13 @@ void pbig_factorial_nested()
         }
         long double res = 1.0;
 
-        omp_log << "r" << ri << "\t: {";
+        omp_logger << "r" << ri << "\t: {";
         for (auto pres : p)
         {
-            omp_log << "p" << pres.first << ", ";
+            omp_logger << "p" << pres.first << ", ";
             res *= pres.second;
         }
-        omp_log << "} -> \tMult(r) = " << res << std::endl;
+        omp_logger << "} -> \tMult(r) = " << res << std::endl;
         p.clear();
         #pragma omp critical
         {
@@ -136,27 +138,27 @@ void pbig_factorial_nested()
     }
 
     long double res = 1.0;
-    omp_log << "t\t: {";
+    omp_logger << "t\t: {";
     for (auto rres : r)
     {
-        omp_log << "r" << rres.first << ", ";
+        omp_logger << "r" << rres.first << ", ";
         res *= rres.second;
     }
-    omp_log << "} -> \tMult(t) = " << res << std::endl;
+    omp_logger << "} -> \tMult(t) = " << res << std::endl;
     r.clear();
     
     //omp_log.end_chrono('#');
     
     n--;
-    omp_log << "t\t:(n: " << n << ") -> pfactorial(n) = " << res << std::endl;
+    omp_logger << "t\t:(n: " << n << ") -> pfactorial(n) = " << res << std::endl;
     
     //omp_log.begin_chrono('%');
     res = factorial(n);
     //omp_log.end_chrono('%');
     
-    omp_log << "t\t:(n: " << n << ") -> factorial(n)  = " << res << std::endl;
+    omp_logger << "t\t:(n: " << n << ") -> factorial(n)  = " << res << std::endl;
     
-    
+    omp_log_finalize();
 }
 
 long double mulsin(unsigned int n)
@@ -212,7 +214,7 @@ void pfactorial_nested()
 
             auto res = sin(1/m0) * sin(1/m1);
 
-            omp_log << "p" << pi << "\t: {" << m0 << ", " << m1 << "} -> \tMult(p) = " << res << std::endl;
+            omp_logger << "p" << pi << "\t: {" << m0 << ", " << m1 << "} -> \tMult(p) = " << res << std::endl;
             #pragma omp critical
             {
                 p[pi] = res;
@@ -220,13 +222,13 @@ void pfactorial_nested()
         }
         long double res = 1.0;
 
-        omp_log << "r" << ri << "\t: {";
+        omp_logger << "r" << ri << "\t: {";
         for (int i = 0; i < N_THS_2; i++)
         {
-            omp_log << "p" << i << ", ";
+            omp_logger << "p" << i << ", ";
             res *= p[i];
         }
-        omp_log << "} -> \tMult(r) = " << res << std::endl;
+        omp_logger << "} -> \tMult(r) = " << res << std::endl;
 
         #pragma omp critical
         {
@@ -236,22 +238,22 @@ void pfactorial_nested()
     }
 
     long double res = 1.0;
-    omp_log << "t\t: {";
+    omp_logger << "t\t: {";
     for (int i = 0; i < N_THS_1; i++)
     {
-        omp_log << "r" << i << ", ";
+        omp_logger << "r" << i << ", ";
         res *= r[i];
     }
-    omp_log << "} -> \tMult(t) = " << res << std::endl;
+    omp_logger << "} -> \tMult(t) = " << res << std::endl;
     
     n--;
-    omp_log << "t\t:(n: " << n << ") -> pmulsin(n) = " << res << std::endl;
+    omp_logger << "t\t:(n: " << n << ") -> pmulsin(n) = " << res << std::endl;
     //omp_log.end_chrono('#');
 
     
     //omp_log.begin_chrono('%');
     res = mulsin(n);
-    omp_log << "t\t:(n: " << n << ") -> mulsin(n)  = " << res << std::endl;
+    omp_logger << "t\t:(n: " << n << ") -> mulsin(n)  = " << res << std::endl;
     //omp_log.end_chrono('%');
     
     

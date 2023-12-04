@@ -28,41 +28,42 @@ void pfor1()
 
 void pfor1bis()
 {
-    static int const cant = 8000;
-    {
+    static int const cant = 30;
+    /*{
         omp_log_inic();
-        omp_log << "secuential" << std::endl;
+        omp_logger << "secuential" << std::endl;
         for (int i=1; i<cant; i++)
         {
             if(i % (cant/30) == 0 || i == 1)
-                omp_log << i << std::endl;
+                omp_logger << i << std::endl;
         }
-    }
-    std::cout << "--------------"  << std::endl;
+        omp_log_finalize();
+    }*/
     {
         omp_log_inic();
-        omp_log << "parallel" << std::endl;
+        omp_logger << "parallel" << std::endl;
         //OmpLogInt i2 = OmpLogInt(1, omp_log);
         #pragma omp parallel for
-        for (auto i = 1; i < cant; i++)
-        {
+        for (int i = 1; i < cant; i++ )
+        {   
             omp_log_inic_for(&i);
-            if(i % (cant/30) == 0 || i == 1)
-                omp_log << "first for " << i << std::endl;
+            //if(i.value % (cant/30) == 0 || i.value == 1)
+            omp_logger << "first for " << i << std::endl;
         }
         omp_log_end_for();
 
-        omp_log << "intermedate" << std::endl;
+        omp_logger << "intermedate" << std::endl;
 
         #pragma omp parallel for
-        for (auto i = 1; i < cant; i++)
+        for (int i = 1; i < cant; i++)
         {
             omp_log_inic_for(&i);
-            if(i % (cant/30) == 0 || i == 1)
-                omp_log << "second for " << i << std::endl;
+            //if(i % (cant/30) == 0 || i == 1)
+            omp_logger << "second for " << i << std::endl;
         }
         omp_log_end_for();
 
-        omp_log << "end" << std::endl;
+        omp_logger << "end" << std::endl;
+        omp_log_finalize();
     }
 }

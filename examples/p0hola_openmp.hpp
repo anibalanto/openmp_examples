@@ -8,24 +8,26 @@ using namespace std;
 
 void phola_openmp()
 {
-    cout << "Permiso" << "\n";
+    cout << "Using incorrectly cout" << "\n";
+    cout << "Beginning" << "\n";
 
     #pragma omp parallel num_threads(4)
     {
         int nts = omp_get_num_threads();
         int nt  = omp_get_thread_num();
-        cout << "Hola OpenMP! "
-             << "Yo soy "    << nt
-             << ". Vinimos " << nts
-             << "\n";
+        cout << "Hi OpenMP! "
+                << "I'm "    << nt
+                << ". Come " << nts
+                << "\n";
     }
 
-    cout << "Nos vamos!" << "\n";
+    cout << "When appear?" << "\n";
 }
 
 void pcritical_hola_openmp()
 {
-    cout << "Permiso" << "\n";
+    cout << "Using correctly cout (critical section)" << "\n";
+    cout << "Beginning" << "\n";
 
     #pragma omp parallel num_threads(4)
     {
@@ -33,22 +35,23 @@ void pcritical_hola_openmp()
         int nt  = omp_get_thread_num();
         #pragma omp critical
         {
-            cout << "Hola OpenMP! "
-                 << "Yo soy "    << nt
-                 << ". Vinimos " << nts
+            cout << "Hi OpenMP! "
+                 << "I'm "    << nt
+                 << ". Come " << nts
                  << "\n";
         }
     }
 
-    cout << "Nos vamos!" << "\n";
+    cout << "When appear?" << "\n";
 }
 
 void phello_omp()
 {
+    cout << "Using correctly cout (visual asinc)" << "\n";
 
     omp_log_inic();
 
-    omp_log << "Permiso" << std::endl;
+    omp_logger << "Beginning" << std::endl;
 
     #pragma omp parallel num_threads(4)
     {
@@ -56,13 +59,15 @@ void phello_omp()
 
         int nts = omp_get_num_threads();
         int nt  = omp_get_thread_num();
-        omp_log << "Hola OpenMP! "
-                << "Yo soy "    << nt
-                << ". Vinimos " << nts
+        omp_logger << "Hi OpenMP! "
+                << "I'm "    << nt
+                << ". Come " << nts
                 << std::endl;
     }
 
-    cout << "Nos vamos!" << "\n";
+    cout << "When appear?" << "\n";
+
+    omp_log_finalize();
 }
 
 

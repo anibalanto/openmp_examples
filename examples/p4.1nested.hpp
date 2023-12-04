@@ -21,25 +21,22 @@ void phello_nested_named( const std::string && name)
 
     omp_log_inic();
 
-    omp_log << "Iniciamos los encuentros "
-            << name << std::endl;
-
     #pragma omp parallel num_threads(4)
     {
         omp_log_inic_parented();
 
-        omp_log << "Ciudad numero "
+        omp_logger << "Ciudad numero "
                 << omp_get_thread_num() << std::endl;
 
         #pragma omp parallel num_threads(4)
         {
             omp_log_inic_parented();
 
-            omp_log << "Casa numero "  << omp_get_thread_num() << " (round 1)" <<std::endl;
+            omp_logger << "Casa numero "  << omp_get_thread_num() << " (round 1)" <<std::endl;
 
             int nts = omp_get_num_threads();
             int nt  = omp_get_thread_num();
-            omp_log << "Hola OpenMP! "
+            omp_logger << "Hola OpenMP! "
                     << "Yo soy "    << nt
                     << ". Vinimos " << nts
                     << std::endl;
@@ -50,11 +47,11 @@ void phello_nested_named( const std::string && name)
         {
             omp_log_inic_parented();
 
-            omp_log << "Casa numero "  << omp_get_thread_num() << " (round 2)" << std::endl;
+            omp_logger << "Casa numero "  << omp_get_thread_num() << " (round 2)" << std::endl;
 
             int nts = omp_get_num_threads();
             int nt  = omp_get_thread_num();
-            omp_log << "Hola OpenMP! "
+            omp_logger << "Hola OpenMP! "
                     << "Yo soy "    << nt
                     << ". Vinimos otra vez! Somos " << nts
                     << std::endl;
@@ -62,7 +59,9 @@ void phello_nested_named( const std::string && name)
         }
     }
 
-    omp_log << "Nos vamos!" << std::endl;
+    omp_logger << "Nos vamos!" << std::endl;
+
+    omp_log_finalize();
 }
 
 void phello_nested()

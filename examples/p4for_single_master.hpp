@@ -53,6 +53,7 @@ void p4for_single_master()
                 log << "parallel 4." << i << std::endl;
 
         }
+        omp_log_finalize();
     }
 }
 
