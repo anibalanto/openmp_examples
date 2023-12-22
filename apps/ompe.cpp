@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
             //loader(pfor1),
             loader(phola_openmp),
             loader(pcritical_hola_openmp),
-            loader(phello_omp),
+            loader(preport_omp),
             loader(pfor1bis),
             /*loader(pfor2),
             loader(pnumerical_integration),

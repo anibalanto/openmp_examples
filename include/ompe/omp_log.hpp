@@ -1,8 +1,18 @@
-/*
- * OpenMP Log
+
+/**
+ * @file omp_log.h
+ * @brief OpenMP Log library for tracking thread execution in parallel programs.
  *
- * @autor Anibal Fernando Antonelli
- * Catedra: Sistemas De Computación Distribuidos
+ * @author Anibal Fernando Antonelli
+ * @date [2023-12-17]
+ * @version 1.0
+ *
+ * @details
+ * This library provides facilities to log and visualize the execution of OpenMP
+ * threads in parallel programs. It includes features such as thread forking,
+ * joining, message logging, and chrono measurement.
+ *
+ * Sistemas De Computación Distribuidos
  * Facultad de Ingeniería
  * Universidad Nacional de Mar del Plata
  */
@@ -27,10 +37,14 @@
 #include <thread>
 #include <unordered_map>
 
-//#define omp_log_test_end
-//#define omp_log_test
-//#define omp_log_test_logging
+// #define omp_log_test_end
+// #define omp_log_test
+// #define omp_log_test_logging
 
+/**
+ * @namespace omp_log
+ * @brief Namespace for the OpenMP Log library.
+ */
 namespace omp_log {
 
 static int precision_default = 6; //> time precision to show at stream buffer
@@ -81,8 +95,8 @@ public:
   thread_team(sptr<vec<sptr<thread_dimension>>> dimensions,
               thread *owner = nullptr);
 
-  ~thread_team(){
-  //  std::cout << "team_deleted" << std::endl; 
+  ~thread_team() {
+    // std::cout << "~thread_team @" << this << std::endl;
   }
 
   const vec<sptr<thread>> &get_threads() const { return threads; }
@@ -98,6 +112,11 @@ private:
 
 std::string vis_id(thread_id id);
 
+/**
+ * @class thread
+ * @brief Represents an OpenMP thread with its unique identifier, dimension, and
+ * nested threads.
+ */
 class thread {
 
   int num;
@@ -105,7 +124,6 @@ class thread {
   thread *parent;
   sptr<thread_team> nested;
   std::stack<sptr<thread_team>> stack_nested;
-
 
 public:
   thread(int num, thread_dimension &dimension, thread *parent)
@@ -116,9 +134,8 @@ public:
   }
 
   ~thread() {
- //   std::cout << "{-" << num << "-}" << std::endl; 
 #ifdef omp_log_test
-     
+    std::cout << "{-" << num << "-}" << std::endl;
 #endif
   }
 
@@ -175,14 +192,14 @@ public:
   const sptr<thread_team> &get_nested() const { return nested; }
 
   void fork(sptr<vec<sptr<thread_dimension>>> dimensions) {
-    if( nested != nullptr ) {
+    if (nested != nullptr) {
       stack_nested.emplace(nested);
     }
-    nested = std::make_shared<thread_team>(thread_team{dimensions, this});
+    nested = std::make_shared<thread_team>(dimensions, this);
   }
 
   void join() {
-    if( stack_nested.empty() ) {
+    if (stack_nested.empty()) {
       nested = nullptr;
     } else {
       nested = stack_nested.top();
@@ -505,6 +522,28 @@ struct chrono_log {
   std::chrono::system_clock::time_point time;
 };
 
+struct chrono_log_begin {
+  chrono_log ch_log;
+  chrono_log_begin(const char &id,
+                   const std::chrono::system_clock::time_point &time)
+      : ch_log{id, time} {}
+};
+
+struct chrono_log_end {
+  chrono_log ch_log;
+  chrono_log_end(const char &id,
+                 const std::chrono::system_clock::time_point &time)
+      : ch_log{id, time} {}
+};
+
+inline chrono_log_begin begin_chrono(const char &id) {
+  return chrono_log_begin{id, std::chrono::system_clock::now()};
+}
+
+inline chrono_log_end end_chrono(const char &id) {
+  return chrono_log_end{id, std::chrono::system_clock::now()};
+}
+
 class duration {
   std::chrono::duration<double> _duration;
   int _precision;
@@ -596,14 +635,14 @@ public:
     logging({event_t::message, {id}, {msg}, {}});
   }
 
-  void begin_chrono(const thread_id &id, const char &ch) {
-    auto chr = opt<chrono_log>({ch, std::chrono::system_clock::now()});
-    logging({event_t::chrono_begin, {id}, {}, {}, chr});
+  void begin_chrono(const thread_id &id, const chrono_log &ch_log) {
+    // auto chr = opt<chrono_log>(ch_log);
+    logging({event_t::chrono_begin, {id}, {}, {}, {ch_log}});
   }
 
-  void end_chrono(const thread_id &id, const char &ch) {
-    auto chr = opt<chrono_log>({ch, std::chrono::system_clock::now()});
-    logging({event_t::chrono_end, {id}, {}, {}, chr});
+  void end_chrono(const thread_id &id, const chrono_log &ch_log) {
+    // auto chr = opt<chrono_log>({ch, std::chrono::system_clock::now()});
+    logging({event_t::chrono_end, {id}, {}, {}, {ch_log}});
   }
 
 private:
@@ -719,6 +758,10 @@ class thread_log_dimension {
 public:
   thread_log_dimension() : dimension{std::make_shared<thread_dimension>()} {}
 
+  ~thread_log_dimension() {
+    // std::cout << "~thread_log_dimension @" << this << std::endl;
+  }
+
   sptr<thread_dimension> &get_dimension() { return dimension; }
 
   void registrate_child_dimension(int pos, sptr<thread_dimension> dimension) {
@@ -747,27 +790,55 @@ public:
 
 class stream_logger_proxy;
 
+/**
+ * @class thread_info
+ * @brief Provides information about the OpenMP thread, including its number,
+ * total number of threads, and a stream logger proxy.
+ */
+struct thread_info_data {
+  int thread_num;
+  int num_threads;
+  void *mem_dir;
+};
+
+/**
+ * @class thread_info
+ * @brief Provides information about the OpenMP thread, including its number,
+ * total number of threads, and a stream logger proxy.
+ */
 struct thread_info {
-  int thread_num = omp_get_thread_num();
-  int num_threads = omp_get_num_threads();
-  stream_logger_proxy *stream_log_pxy = nullptr;
+
+  thread_info_data data;
+  bool root;
+
+  thread_info() : data{omp_get_thread_num(), omp_get_num_threads(), this} {}
 
   void finalize();
 
-  ~thread_info() { finalize(); }
+  bool is_root() const { 
+    return root;//stream_log_pxy == nullptr; 
+  }
+
+  const thread_info *parent() const;
+
+  ~thread_info() {
+    finalize();
+  }
+
+private:
+  stream_logger_proxy *stream_log_pxy = nullptr;
+
+  friend stream_logger_proxy;
 };
 
 class stream_logger;
 
+/**
+ * @class thread_log
+ * @brief Represents the log of an OpenMP thread, including its ID, number,
+ * total number of threads, and a reference to a stream logger.
+ */
 class thread_log {
-
-  /*struct find_by_private_mem {
-      bool operator()(const thread_log & th) {
-          return th._private_mem == private_mem;
-      }
-  private:
-      void *private_mem;
-  };*/
 
   thread_id id;
   int num;
@@ -777,7 +848,7 @@ class thread_log {
 
   opt<thread_logger> u_logger;
   thread_logger &logger;
-  stream_logger &s_log;
+  stream_logger &s_log; //!< Stream logger associated with the thread
   thread_log_dimension log_dimension;
   sptr<thread_inic_team_log> data_team;
 
@@ -797,57 +868,37 @@ class thread_log {
     return parent->get_logger();
   }
 
-  static uintptr_t get_private_mem(const void *private_mem) {
-    return (uintptr_t)private_mem;
+  static uintptr_t get_private_mem(const void *private_mem,
+                                   const void *mem_dir) {
+    return reinterpret_cast<uintptr_t>((private_mem != nullptr) ? private_mem
+                                                                : mem_dir);
   }
 
-  void inic() {
+public:
+  /**
+   * @brief Constructs a thread_log instance
+   * @param info The thread_info object associated with the thread
+   * @param private_mem Private memory pointer (optinal)
+   * @param parent Parent stream logger for hierarchical logging (optional)
+   */
+  thread_log(const thread_info_data &data, stream_logger &s_log,
+             thread_log *parent = nullptr, const void *private_mem = nullptr)
+      : num{data.thread_num}, num_threads{data.num_threads},
+        mem_id{get_private_mem(private_mem, data.mem_dir)},
+        u_logger{get_unique_log(parent)}, logger{get_log(parent, u_logger)},
+        s_log{s_log}, data_team{std::make_shared<thread_inic_team_log>()},
+        parent{parent} {
 
     if (!parent) {
       id.push_front(num);
       auto root_team = std::make_shared<thread_inic_team_log>();
       this->vincule_to_team(root_team);
       logger.begin(id, root_team);
-#ifdef omp_log_test
-      std::cout << "havent parent! @" << this->get_mem_id() << "{"
-                << vis_id(this->get_id()) << "}" << std::endl;
-#endif
     } else {
       id = parent->get_id();
       id.push_front(num);
       parent->registrate_child(*this);
-#ifdef omp_log_test
-      std::cout << "parent, registrate child! @" << parent->get_mem_id() << "{"
-                << vis_id(parent->get_id()) << "} -> @" << this->get_mem_id()
-                << "{" << vis_id(this->get_id()) << "}" << std::endl;
-#endif
     }
-  }
-
-public:
-  /*thread_log(thread_log const&)      = delete;
-  void operator=(thread_log const&)  = delete;*/
-
-  /*static thread_log && instance(stream_logger &s_log, thread_log * parent =
-  nullptr, void * private_mem = nullptr)
-  {
-      if( parent != nullptr )
-      {
-          if( auto opt_child = parent->get_child( (uintptr_t) private_mem) )
-              return **opt_child;
-          auto ptr = new thread_log(s_log, parent, private_mem);
-          return parent->registrate_child( sptr<thread_log>( ptr ) );
-      }
-      return { s_log, parent, private_mem };
-  }*/
-
-  thread_log(const thread_info &info, stream_logger &s_log,
-             const void *private_mem, thread_log *parent = nullptr)
-      : num{info.thread_num}, num_threads{info.num_threads},
-        mem_id{get_private_mem(private_mem)}, u_logger{get_unique_log(parent)},
-        logger{get_log(parent, u_logger)}, s_log{s_log},
-        data_team{std::make_shared<thread_inic_team_log>()}, parent{parent} {
-    inic();
   }
 
   void finalize_shared_elements() {
@@ -861,7 +912,9 @@ public:
       parent->remove_child(*this);
   }
 
-  ~thread_log() { }
+  ~thread_log() {
+    // std::cout << "~thread_log @" << this << std::endl;
+  }
 
   thread_id &get_id() { return id; }
 
@@ -879,9 +932,11 @@ public:
     d_team->add_data(id.front(), num_threads, get_dimension());
   }
 
-  void begin_chrono(const char &ch) { logger.begin_chrono(id, ch); }
+  void begin_chrono(const chrono_log &ch_log) {
+    logger.begin_chrono(id, ch_log);
+  }
 
-  void end_chrono(const char &ch) { logger.end_chrono(id, ch); }
+  void end_chrono(const chrono_log &ch_log) { logger.end_chrono(id, ch_log); }
 
   void message();
 
@@ -921,22 +976,6 @@ public:
   stream_logger &get_s_log();
 
 protected:
-  /*std::tuple<void *, > get_tuple(thread_log && th_log) {
-      return std::tuple{ th_log.private_mem(), th_log };
-  }*/
-
-  /*bool child_is_registered(uintptr_t private_mem) {
-      return childs.find( private_mem ) !=  childs.end();
-  }*/
-
-  /*thread_log & get_child(uintptr_t private_mem)
-  {
-      auto it = childs.find( private_mem );
-      if (it != childs.end() )
-          return std::optional{ it->second };
-      return std::nullopt;
-  }*/
-
   void remove_child(thread_log &child) {
     auto it = childs.find(child.get_mem_id());
     if (it != childs.end()) {
@@ -954,40 +993,33 @@ protected:
   }
 };
 
+/**
+ * @class stream_logger
+ * @brief Handles the logging of stream data for an OpenMP thread.
+ */
 class stream_logger {
   thread_log th_log;
   std::ostringstream sstream;
   bool finalized = false;
 
 public:
-  stream_logger(const thread_info &info_th, stream_logger &parent)
-      : th_log{info_th, *this, &info_th, &(parent.get_th_log())} {
-    // parent.get_th_log().registrate_child( th_log );
-  }
+  stream_logger(const thread_info_data &data) : th_log{data, *this} {}
 
-  stream_logger(const thread_info &info_th) : th_log{info_th, *this, &info_th} {
-    /*std::string a = "new steram logger! @"+
-            std::to_string(this)+
-            "{"+vis_id(this->th_log.get_id())+"} -> @"+
-            std::to_string(child.get_mem_id())+
-            "{"+vis_id(child.get_id())+ "}\n"  ;
+  stream_logger(const thread_info_data &data, stream_logger &parent)
+      : th_log{data, *this, &(parent.get_th_log())} {}
 
-    std::cout << a;*/
-  }
-
-  stream_logger(const thread_info &info_th, stream_logger &parent,
+  stream_logger(const thread_info_data &data, stream_logger &parent,
                 void *private_mem)
-      : th_log{info_th, *this, private_mem, &(parent.get_th_log())} {
-    // parent.get_th_log().registrate_child( th_log );
-  }
+      : th_log{data, *this, &(parent.get_th_log()), private_mem} {}
 
   ~stream_logger() {
     finalize();
+    // std::cout << "~stream_logger @" << this << std::endl;
   }
 
-  void finalize() { 
+  void finalize() {
     th_log.finalize_shared_elements();
-    if( !finalized ) {
+    if (!finalized) {
       flush();
       finalized = true;
     }
@@ -1004,18 +1036,7 @@ public:
     return str;
   }
 
-  void begin_chrono(char c) {
-    flush();
-    th_log.begin_chrono(c);
-  }
-
-  void end_chrono(char c) {
-    flush();
-    th_log.end_chrono(c);
-  }
-
 protected:
-  
   void flush() {
     if (!empty())
       th_log.message();
@@ -1050,13 +1071,41 @@ protected:
 #endif
     return sm;
   }
+
+  friend stream_logger &operator<<(stream_logger &sm,
+                                   const chrono_log_begin &bch) {
+    sm.th_log.begin_chrono(bch.ch_log);
+    return sm;
+  }
+
+  friend stream_logger &operator<<(stream_logger &sm,
+                                   const chrono_log_end &ech) {
+    sm.th_log.end_chrono(ech.ch_log);
+    return sm;
+  }
 };
 
 inline void thread_log::message() { logger.message(id, s_log.extract()); }
 
 inline stream_logger &thread_log::get_s_log() { return s_log; }
 
-class stream_logger_proxy;
+struct stream_operation {
+
+  std::chrono::system_clock::time_point time =std::chrono::system_clock::now();
+  std::function<void()> operation;
+
+  stream_operation(std::function<void()> _operation) :
+    operation{_operation}
+  { }
+
+};
+
+struct stream_opearation_comparator {
+  bool operator()(const std::shared_ptr<stream_operation> &lhs,
+                  const std::shared_ptr<stream_operation> &rhs) const {
+    return lhs->time < rhs->time;
+  }
+};
 
 /**
  * @brief The critical_thread class
@@ -1065,15 +1114,15 @@ class stream_logger_proxy;
  *
  */
 class critical_thread {
-  std::queue<std::function<void()>> operation_queue;
+  std::set<sptr<stream_operation>, stream_opearation_comparator>
+      stream_operation_set;
   omp_lock_t queue_lock;
   bool stop_flag;
   std::thread thread;
 
-  stream_logger_proxy *root_stream_logger_proxy;
+  stream_logger_proxy *root_stream_logger_proxy; //!< Root stream logger proxy
 
-  critical_thread() : stop_flag(false)
-  {  }
+  critical_thread() : stop_flag(false) {}
 
 public:
   static critical_thread &get_instance() {
@@ -1081,24 +1130,45 @@ public:
     return instance;
   }
 
-  ~critical_thread() { 
-    thread.join(); 
+  ~critical_thread() {
+    // thread.join();
   }
 
   void set_root_stream_logger_proxy(stream_logger_proxy *root) {
     root_stream_logger_proxy = root;
   }
 
+  void publish_stream_operations();
+
   void finish_root_stream_logger();
 
-  void enqueue_operation(const std::function<void()> &operation) {
+  void enqueue_operation(const sptr<stream_operation> &operation) {
     omp_set_lock(&queue_lock);
-    operation_queue.push(operation);
+    stream_operation_set.insert(operation);
     omp_unset_lock(&queue_lock);
   }
 
   void start_operate() {
-    thread = std::thread(&critical_thread::run, this);
+    // thread = std::thread(&critical_thread::run, this);
+    publish_stream_operations();
+    bool stop_loop = false;
+    while (!stop_loop) {
+      omp_set_lock(&queue_lock);
+      if (stream_operation_set.empty()) {
+        // if (stop_flag) {
+        stop_loop = true;
+        //finish_root_stream_logger();
+        //}
+      } else { // operation_queue not empty
+        const sptr<stream_operation> &first_operation =
+            *stream_operation_set.begin();
+        // std::cout << first_operation->time.time_since_epoch().count() <<
+        // std::endl;
+        first_operation->operation(); // operate
+        stream_operation_set.erase(stream_operation_set.begin());
+      }
+      omp_unset_lock(&queue_lock);
+    }
   }
 
   void stop_operate() {
@@ -1108,66 +1178,122 @@ public:
   }
 
 private:
-  void run() {
-    bool stop_loop = false;
-    while (!stop_loop) {
-      omp_set_lock(&queue_lock);
-      if (operation_queue.empty()) {
-        if (stop_flag) {
-          stop_loop = true;
-          finish_root_stream_logger();
+  void run() {}
+};
+
+#define array_size 100
+
+class stream_operation_manager {
+
+  std::queue<std::shared_ptr<std::queue<std::shared_ptr<stream_operation>>>>
+      stream_operation_queues[array_size];
+
+  static std::tuple<int, int> make_weigth(const thread_info &th_info) {
+    if (th_info.is_root()) {
+      return std::make_tuple(0, 0);
+    }
+    const thread_info *th_info_parent = th_info.parent();
+    if (th_info_parent != nullptr) {
+      auto [weigth, pos] = make_weigth(*(th_info_parent));
+      return std::make_tuple(th_info.data.thread_num * pos + weigth, ++pos);
+    }
+    return std::make_tuple(0, 0);
+  }
+
+  static int make_index(const thread_info &th_info) {
+    auto [weigth, _] = make_weigth(th_info);
+    return weigth;
+  }
+
+public:
+  void add_stream_operation_queue(
+      const thread_info &th_info,
+      const std::shared_ptr<std::queue<std::shared_ptr<stream_operation>>>
+          &so_queue) {
+    stream_operation_queues[make_index(th_info)].push(so_queue);
+  }
+
+  void publish_stream_operations() {
+    for (int i = 0; i < array_size; i++) {
+      while ( ! stream_operation_queues[i].empty() ) {
+        std::queue<std::shared_ptr<stream_operation>> &queue =
+            *(stream_operation_queues[i].front());
+        while (!queue.empty()) {
+          std::shared_ptr<stream_operation> operation = queue.front();
+          critical_thread::get_instance().enqueue_operation(operation);
+          queue.pop();
         }
-      } else {                     // operation_queue not empty
-        operation_queue.front()(); // operate
-        operation_queue.pop();
+        stream_operation_queues[i].pop();
       }
-      omp_unset_lock(&queue_lock);
     }
   }
 };
 
 /**
- * @brief The stream_logger_proxy class
- *
- * Tiene la responsabilidad de encapsular stream_loggers
- * para que pueda realizar las operaciones de forma paralela
- * reciviendo un resolver function<stream,_logger & ()>
- *
+ * @class stream_logger_proxy
+ * @brief A proxy class for the stream logger to be used as a data member in
+ * thread_info. It gets sgream_logger resolver and load queue buffer with log
+ * opeartons
  */
 class stream_logger_proxy {
 
-  omp_lock_t stream_log_lock;
+  std::optional<std::unique_ptr<stream_operation_manager>> s_op_manager =
+      std::nullopt;
+
+  std::shared_ptr<std::queue<std::shared_ptr<stream_operation>>> operations =
+      std::make_shared<std::queue<std::shared_ptr<stream_operation>>>();
+
   stream_logger *stream_log = nullptr;
   std::function<stream_logger *()> resolver;
 
   stream_logger_proxy *parent;
-  std::set<stream_logger_proxy *> childs;
+  // std::set<stream_logger_proxy *> childs;
 
   thread_info &th_info;
+
+  thread_info &get_thread_info(thread_info &th_info,
+                               stream_logger_proxy *_parent) {
+    th_info.root= _parent == nullptr;
+    th_info.stream_log_pxy = this;
+    return th_info;
+  }
 
 public:
   stream_logger_proxy(std::function<stream_logger *()> _resolver,
                       thread_info &th_info,
                       stream_logger_proxy *_parent = nullptr)
-      : resolver(_resolver), parent(_parent), th_info{th_info} {
-
-    if (parent != nullptr) {
-      parent->add_child(this);
+      : resolver(_resolver), parent(_parent),
+        th_info{get_thread_info(th_info, _parent)} {
+    if (parent == nullptr) { // is root
+      s_op_manager = std::make_unique<stream_operation_manager>();
     }
   }
 
   ~stream_logger_proxy() {
-    std::cout << "~stream_logger_proxy @" << this;
+    // std::cout << "~stream_logger_proxy @" << this << std::endl;
   }
 
-  void add_child(stream_logger_proxy *child) { childs.insert(child); }
+  stream_logger_proxy *get_parent() { return parent; }
 
-  /*void finalize() {
-      stream_log->finalizer_stream_logger();
-      for(auto child : childs) {
-          child->finalize();
-      }
-  }*/
+  const thread_info *get_th_info() { return &th_info; }
+
+  void publish_stream_operations() {
+    if (s_op_manager.has_value()) {
+      s_op_manager.value()->publish_stream_operations();
+    }
+  }
+
+  void push_stream_operations(
+      const thread_info &th_info,
+      const std::shared_ptr<std::queue<std::shared_ptr<stream_operation>>> &operations) {
+    if (s_op_manager.has_value()) {
+      s_op_manager.value()->add_stream_operation_queue(th_info, operations);
+    } else if (parent != nullptr) {
+      parent->push_stream_operations(th_info, operations);
+    } else {
+      std::cout << "problemillas" << std::endl;
+    }
+  }
 
   void make_stream_logger_if_needed() {
     if (stream_log == nullptr) {
@@ -1183,40 +1309,75 @@ public:
     return stream_log;
   }
 
+  void finalize() {
+    operations->push(std::make_shared<stream_operation>(
+        [this] { this->get_stream_logger()->finalize(); }));
+
+    this->push_stream_operations(th_info, operations);
+  }
+
   friend stream_logger_proxy &operator<<(stream_logger_proxy &sm,
                                          const std::string &str) {
-    critical_thread::get_instance().enqueue_operation(
-        [&sm, str] { (*(sm.get_stream_logger())) << str; });
+
+    sm.operations->push(std::make_shared<stream_operation>(
+        [&sm, str] { (*(sm.get_stream_logger())) << str; }));
     return sm;
   }
 
   friend stream_logger_proxy &operator<<(stream_logger_proxy &sm,
                                          const int &i) {
-    critical_thread::get_instance().enqueue_operation(
-        [&sm, i] { (*(sm.get_stream_logger())) << i; });
+
+    sm.operations->push(std::make_shared<stream_operation>(
+        [&sm, i] { (*(sm.get_stream_logger())) << i; }));
     return sm;
   }
 
   friend stream_logger_proxy &operator<<(stream_logger_proxy &sm,
                                          std::ostream &(*fun)(std::ostream &)) {
-    critical_thread::get_instance().enqueue_operation(
-        [&sm] { (*(sm.get_stream_logger())) << std::endl; });
+
+    sm.operations->push(std::make_shared<stream_operation>(
+        [&sm] { (*(sm.get_stream_logger())) << std::endl; }));
+    return sm;
+  }
+
+  friend stream_logger_proxy &operator<<(stream_logger_proxy &sm,
+                                         const chrono_log_begin &bch) {
+
+    sm.operations->push(std::make_shared<stream_operation>(
+        [&sm, bch] { (*(sm.get_stream_logger())) << bch; }));
+    return sm;
+  }
+
+  friend stream_logger_proxy &operator<<(stream_logger_proxy &sm,
+                                         const chrono_log_end &ech) {
+    sm.operations->push(std::make_shared<stream_operation>(
+        [&sm, ech] { (*(sm.get_stream_logger())) << ech; }));
     return sm;
   }
 };
 
+inline const thread_info *thread_info::parent() const {
+  return (stream_log_pxy != nullptr && stream_log_pxy->get_parent() != nullptr)
+             ? stream_log_pxy->get_parent()->get_th_info()
+             : nullptr;
+}
+
 inline void thread_info::finalize() {
-  if (stream_log_pxy != nullptr) {
-    auto *s_log_pxy = stream_log_pxy;
-    critical_thread::get_instance().enqueue_operation([s_log_pxy] {
-      s_log_pxy->get_stream_logger()->finalize();
-    });
+  
+  stream_log_pxy->finalize();
+  if ( this->is_root() ) { 
+    omp_log::critical_thread::get_instance().start_operate();                    \
+    omp_log::critical_thread::get_instance().stop_operate();
   }
 }
 
+inline void critical_thread::publish_stream_operations() {
+  root_stream_logger_proxy->publish_stream_operations();
+}
+
 inline void critical_thread::finish_root_stream_logger() {
-  auto *s_logger = root_stream_logger_proxy->get_stream_logger();
-  delete s_logger;
+  //auto *s_logger = root_stream_logger_proxy->get_stream_logger();
+  //delete s_logger;
 }
 
 /**
@@ -1233,58 +1394,55 @@ class stream_logger_register {
   static std::unordered_map<uintptr_t, sptr<stream_logger>> sloggers;
 
 public:
-
-  static stream_logger_proxy *
-  get_stream_logger(stream_logger_proxy *proxy_parent, thread_info &th_info) {
-    auto * proxy = new stream_logger_proxy(
-        [th_info, proxy_parent]() -> stream_logger * {
-          stream_logger *parent = proxy_parent->get_stream_logger();
-          stream_logger *ptr;
-          ptr = new stream_logger(th_info, *parent);
-          // sloggers[ptr->get_th_log().get_mem_id()] = sptr<stream_logger>(ptr)
-          // ;
-          return ptr;
-        },
-        th_info, proxy_parent);
-        th_info.stream_log_pxy = proxy;
-    return proxy;
-  }
-
   static stream_logger_proxy *get_stream_logger(thread_info &th_info) {
+    const thread_info_data &data = th_info.data;
     auto *root = new stream_logger_proxy(
-        [th_info]() -> stream_logger * {
+        [data]() -> stream_logger * {
           stream_logger *ptr;
-          ptr = new stream_logger(th_info);
-          // sloggers[ptr->get_th_log().get_mem_id()] = sptr<stream_logger>(ptr)
-          // ;
+          ptr = new stream_logger(data);
           return ptr;
         },
         th_info);
-    th_info.stream_log_pxy = root;
     critical_thread::get_instance().set_root_stream_logger_proxy(root);
     return root;
   }
 
-  static stream_logger_proxy *get_stream_logger(stream_logger_proxy *proxy_parent, void *mem_id) {
-    thread_info info_th;
+  static stream_logger_proxy *
+  get_stream_logger(stream_logger_proxy *proxy_parent, thread_info &th_info) {
+    const thread_info_data &data = th_info.data;
+    auto *proxy = new stream_logger_proxy(
+        [data, proxy_parent]() -> stream_logger * {
+          stream_logger *parent = proxy_parent->get_stream_logger();
+          stream_logger *ptr;
+          ptr = new stream_logger(data, *parent);
+          return ptr;
+        },
+        th_info, proxy_parent);
+    return proxy;
+  }
+
+  static stream_logger_proxy *
+  get_stream_logger(stream_logger_proxy *proxy_parent, void *mem_id) {
+    thread_info th_info;
+    const thread_info_data &data = th_info.data;
     return new stream_logger_proxy(
-        [info_th, proxy_parent, mem_id]() -> stream_logger * {
+        [data, proxy_parent, mem_id]() -> stream_logger * {
           stream_logger *parent = proxy_parent->get_stream_logger();
           stream_logger *ptr;
           auto it = sloggers.find((uintptr_t)mem_id);
           if (it != sloggers.end()) {
             ptr = it->second.get();
           } else {
-            ptr = new stream_logger(info_th, *parent, mem_id);
+            ptr = new stream_logger(data, *parent, mem_id);
             sloggers[ptr->get_th_log().get_mem_id()] = sptr<stream_logger>(ptr);
           }
           return ptr;
         },
-        info_th, proxy_parent);
+        th_info, proxy_parent);
   }
 
   const static void remove_stream_loggers(stream_logger_proxy *proxy_parent) {
-    critical_thread::get_instance().enqueue_operation([proxy_parent] {
+    /*critical_thread::get_instance().enqueue_operation([proxy_parent] {
       std::set<uintptr_t> mem_ids = proxy_parent->get_stream_logger()
                                         ->get_th_log()
                                         .get_mem_id_stream_logger_childs();
@@ -1304,7 +1462,7 @@ public:
         }
 #endif
       }
-    });
+    });*/
   }
 };
 
@@ -1341,9 +1499,10 @@ public:
 
 #define omp_log_inic() omp_log_inic_named(omp_log_ptr)
 
-#define omp_log_finalize()                                  \
-  omp_log::critical_thread::get_instance().start_operate(); \
-  omp_log::critical_thread::get_instance().stop_operate()
+
+#define omp_log_finalize()  ;//                                                   \
+//  omp_log::critical_thread::get_instance().start_operate();                    \
+//  omp_log::critical_thread::get_instance().stop_operate()
 
 #define omp_log_inic_parented() omp_log_inic_parented_named(omp_log_ptr)
 
@@ -1357,3 +1516,6 @@ public:
 
 #define omp_logger (*omp_log_ptr)
 
+#define omp_logger_ptr(ptr)                                                    \
+  omp_log_inic_for(ptr);                                                       \
+  omp_logger

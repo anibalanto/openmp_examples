@@ -70,4 +70,37 @@ void phello_omp()
     omp_log_finalize();
 }
 
+void preport_omp()
+{
+    cout << "Using correctly cout (visual asinc)" << "\n";
+
+    omp_log_inic();
+
+    omp_logger << "Beginning" << std::endl;
+
+    omp_set_nested(1);
+
+    #pragma omp parallel num_threads(2)
+    {
+        omp_log_inic_parented();
+        
+        int nts = omp_get_num_threads();
+        int nt  = omp_get_thread_num();
+        omp_logger << "(" << nt <<"," << nts<<")" << std::endl;
+        #pragma omp parallel num_threads(2)
+        {
+            omp_log_inic_parented();
+
+            int nts = omp_get_num_threads();
+            int nt  = omp_get_thread_num();
+            omp_logger << "(" << nt <<"," << nts<<")" << std::endl;
+        }
+    }
+
+    cout << "When appear?" << "\n";
+
+    omp_log_finalize();
+}
+
+
 
